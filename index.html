@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>零点塔罗</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0a12;
+            --gold-primary: #d4b896;
+            --gold-light: #e8d4b8;
+            --text-primary: #f0ebe3;
+            --text-secondary: rgba(240, 235, 227, 0.7);
+            --text-muted: rgba(240, 235, 227, 0.35);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Noto Serif SC', -apple-system, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(ellipse at 30% 20%, rgba(60, 50, 90, 0.12) 0%, transparent 40%),
+                        radial-gradient(ellipse at 70% 80%, rgba(139, 115, 85, 0.08) 0%, transparent 35%);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px;
+        }
+
+        .header {
+            padding: 35px 0 20px;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, var(--bg-deep) 85%, transparent);
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            color: var(--gold-primary);
+            text-shadow: 0 0 30px rgba(212, 184, 150, 0.25);
+        }
+
+        .tagline {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 0.4em;
+            margin-top: 4px;
+        }
+
+        .input-section { padding: 25px 0; display: none; }
+        .input-section.active { display: block; animation: fadeIn 0.5s ease; }
+
+        .input-wrapper {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(212, 184, 150, 0.12);
+            border-radius: 16px;
+            padding: 4px;
+        }
+
+        .input-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-align: center;
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        .daily-limit-info {
+            font-size: 0.75rem;
+            color: #d4b896;
+            text-align: center;
+            margin-bottom: 12px;
+            padding: 8px 16px;
+            background: rgba(212, 184, 150, 0.08);
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(10, 10, 18, 0.5);
+            border: none;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: none;
+        }
+
+        .question-input:focus { outline: none; }
+        .question-input::placeholder { color: var(--text-muted); }
+
+        .btn-primary {
+            width: 100%;
+            margin-top: 18px;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(212, 184, 150, 0.12), rgba(212, 184, 150, 0.06));
+            border: 1px solid var(--gold-primary);
+            border-radius: 50px;
+            color: var(--gold-light);
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            transition: all 0.35s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, rgba(212, 184, 150, 0.22), rgba(212, 184, 150, 0.12));
+            box-shadow: 0 0 40px rgba(212, 184, 150, 0.15);
+        }
+
+        .draw-section { flex: 1; display: none; flex-direction: column; }
+        .draw-section.active { display: flex; }
+
+        .draw-header {
+            text-align: center;
+            padding: 15px 0 12px;
+            position: sticky;
+            top: 85px;
+            background: linear-gradient(to bottom, var(--bg-deep) 50%, transparent);
+            z-index: 100;
+        }
+
+        .draw-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .draw-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+
+        .card-grid {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 10px 0 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card-grid::-webkit-scrollbar { width: 3px; }
+        .card-grid::-webkit-scrollbar-track { background: rgba(212, 184, 150, 0.05); }
+        .card-grid::-webkit-scrollbar-thumb { background: rgba(212, 184, 150, 0.25); border-radius: 2px; }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 400px;
+            width: 100%;
+            padding: 0 8px;
+        }
+
+        @media (min-width: 600px) {
+            .cards-container { grid-template-columns: repeat(4, 1fr); max-width: 700px; gap: 15px; }
+        }
+        @media (min-width: 900px) {
+            .cards-container { grid-template-columns: repeat(5, 1fr); max-width: 900px; }
+        }
+
+        .tarot-card {
+            aspect-ratio: 2/3;
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tarot-card::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #f5e6c8, #d4b896);
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+            z-index: 5;
+            box-shadow: 0 2px 10px rgba(212, 184, 150, 0.4);
+        }
+
+        .tarot-card.selected::after { opacity: 1; transform: scale(1); }
+
+        .tarot-card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tarot-card.flipped .tarot-card-inner { transform: rotateY(180deg); }
+
+        .card-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-back { background: linear-gradient(145deg, #0d0a18, #080612); }
+        .card-back svg { width: 100%; height: 100%; }
+
+        .card-front { background: linear-gradient(180deg, #faf6ed, #f0ebe0); transform: rotateY(180deg); }
+        .card-front svg { width: 100%; height: 100%; }
+
+        .selected-bar {
+            padding: 15px 0 25px;
+            display: none;
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(to top, var(--bg-deep) 80%, transparent);
+        }
+
+        .selected-bar.active { display: block; }
+
+        .selected-info {
+            text-align: center;
+            margin-bottom: 12px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .selected-info span { color: var(--gold-primary); }
+
+        .selected-cards-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .selected-mini {
+            width: 55px;
+            height: 82px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(212, 184, 150, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .selected-mini svg { width: 100%; height: 100%; }
+
+        .btn-draw {
+            display: block;
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--gold-primary), #8b7355);
+            border: none;
+            border-radius: 50px;
+            color: #0a0a12;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.35s ease;
+            box-shadow: 0 6px 25px rgba(212, 184, 150, 0.2);
+        }
+
+        .btn-draw:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+        .btn-draw:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 10px 35px rgba(212, 184, 150, 0.35); }
+
+        .reading-section { display: none; padding: 30px 0 50px; }
+        .reading-section.active { display: block; animation: fadeIn 0.6s ease; }
+        
+        /* AI 解读区域 */
+        .ai-reading-section { display: none; padding: 30px 0 50px; }
+        .ai-reading-section.active { display: block; animation: fadeIn 0.6s ease; }
+        
+        .ai-reading-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            text-align: center;
+            color: var(--gold-light);
+            letter-spacing: 0.12em;
+            margin-bottom: 8px;
+        }
+        
+        .ai-reading-question { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 25px; }
+        
+        .ai-reading-content {
+            background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.015));
+            border: 1px solid rgba(212, 184, 150, 0.12);
+            border-radius: 16px;
+            padding: 28px 24px;
+            margin-bottom: 20px;
+            font-size: 0.92rem;
+            line-height: 2.0;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(212, 184, 150, 0.05);
+            position: relative;
+        }
+        
+        .ai-reading-content p {
+            margin-bottom: 16px;
+        }
+        
+        .ai-reading-content br {
+            line-height: 2;
+        }
+        
+        .ai-reading-content.streaming {
+            border-color: rgba(212, 184, 150, 0.25);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+            50% { box-shadow: 0 4px 30px rgba(212, 184, 150, 0.2); }
+        }
+        
+        .ai-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            flex-direction: column;
+        }
+        
+        .ai-loading-text {
+            margin-top: 15px;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            letter-spacing: 0.1em;
+        }
+        
+        .ai-loading-dots {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .ai-loading-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--gold-primary);
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite;
+        }
+        
+        .ai-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .ai-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); opacity: 0.4; }
+            50% { transform: translateY(-10px); opacity: 1; }
+        }
+        
+        .ai-retry-btn {
+            background: transparent;
+            border: 1px solid rgba(212, 184, 150, 0.3);
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 15px;
+            display: none;
+            transition: all 0.3s;
+        }
+        
+        .ai-retry-btn:hover {
+            border-color: var(--gold-primary);
+            color: var(--gold-light);
+        }
+        
+        .ai-retry-btn.visible {
+            display: inline-block;
+        }
+
+        .reading-header { text-align: center; margin-bottom: 30px; }
+
+        .reading-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            color: var(--gold-light);
+            letter-spacing: 0.12em;
+            margin-bottom: 8px;
+        }
+
+        .reading-question { font-size: 0.8rem; color: var(--text-muted); }
+
+        .reading-card {
+            background: rgba(255,255,255,0.015);
+            border: 1px solid rgba(212, 184, 150, 0.1);
+            border-radius: 16px;
+            padding: 20px 16px;
+            margin-bottom: 16px;
+        }
+
+        .reading-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(212, 184, 150, 0.08);
+        }
+
+        .reading-position {
+            font-size: 0.75rem;
+            color: #f5e6d8;
+            font-weight: 600;
+            padding: 3px 10px;
+            background: rgba(212, 184, 150, 0.15);
+            border-radius: 20px;
+        }
+
+        .reading-name { font-family: 'Cinzel', serif; font-size: 0.95rem; color: var(--gold-light); }
+
+        .reading-orientation {
+            margin-left: auto;
+            font-size: 0.65rem;
+            padding: 3px 10px;
+            background: rgba(212, 184, 150, 0.12);
+            border-radius: 20px;
+            color: #f5e6c8;
+        }
+
+        .reading-content { font-size: 0.88rem; line-height: 1.85; color: var(--text-secondary); }
+
+        .btn-restart {
+            display: block;
+            width: 100%;
+            max-width: 260px;
+            margin: 30px auto 0;
+            padding: 13px;
+            background: transparent;
+            border: 1px solid rgba(212, 184, 150, 0.15);
+            border-radius: 50px;
+            color: var(--text-muted);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.12em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-restart:hover { border-color: var(--gold-primary); color: var(--gold-light); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">零点塔罗</h1>
+            <p class="tagline">MYSTERY · GENTLE · DIRECT</p>
+        </header>
+
+        <section class="input-section active" id="inputSection">
+            <div class="input-wrapper">
+                <p class="input-label">静下心来，默念你的问题</p>
+                <p class="daily-limit-info">今日剩余免费次数：<span id="dailyRemaining">3</span>次</p>
+                <textarea class="question-input" id="questionInput" rows="2" placeholder="我的感情运程如何？"></textarea>
+            </div>
+            <button class="btn-primary" id="startBtn">开始洗牌</button>
+        </section>
+
+        <section class="draw-section" id="drawSection">
+            <div class="draw-header">
+                <p class="draw-title">上下滑动选择 1-4 张牌</p>
+                <p class="draw-hint">点击牌面选中</p>
+            </div>
+            <div class="card-grid" id="cardGrid">
+                <div class="cards-container" id="cardsContainer"></div>
+            </div>
+            <div class="selected-bar" id="selectedBar">
+                <p class="selected-info">已选择 <span id="selectedCount">0</span>/4 张</p>
+                <div class="selected-cards-row" id="selectedRow"></div>
+                <button class="btn-draw" id="drawBtn" disabled>查看解读</button>
+            </div>
+        </section>
+
+        <!-- AI 解读区域 -->
+        <section class="reading-section" id="readingSection">
+            <div class="reading-header">
+                <h2 class="reading-title">塔罗解读</h2>
+                <p class="reading-question" id="readingQuestion"></p>
+            </div>
+            <div id="readingContent"></div>
+        </section>
+        
+        <!-- AI 深度解读区域（放在下面） -->
+        <section class="ai-reading-section" id="aiReadingSection">
+            <h2 class="ai-reading-title">✦ 综合总结 ✦</h2>
+            <p class="ai-reading-question" id="aiReadingQuestion"></p>
+            <div class="ai-reading-content" id="aiReadingContent">
+                <div class="ai-loading">
+                    <div class="ai-loading-dots"><span></span><span></span><span></span></div>
+                    <span class="ai-loading-text">正在分析牌面...</span>
+                </div>
+            </div>
+            <button class="ai-retry-btn" id="aiRetryBtn">重试</button>
+            <button class="btn-restart" id="aiRestartBtn">重新抽牌</button>
+        </section>
+    </div>
+
+    <script>
+        // ==================== 配置区域 ====================
+        const DEEPSEEK_API_KEY = 'sk-896cd9c0eb034de39dcbebab98b5c816';
+        const API_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
+        const MODEL = 'deepseek-chat';
+        const DAILY_FREE_LIMIT = 999; // 测试期间临时增加次数
+        
+        // 检查每日使用次数
+        function checkDailyLimit() {
+            const today = new Date().toDateString();
+            const lastVisit = localStorage.getItem('lastVisitDate');
+            let count = parseInt(localStorage.getItem('dailyCount') || '0');
+            
+            if (lastVisit !== today) {
+                localStorage.setItem('lastVisitDate', today);
+                localStorage.setItem('dailyCount', '0');
+                return { allowed: true, remaining: DAILY_FREE_LIMIT };
+            }
+            
+            if (count >= DAILY_FREE_LIMIT) {
+                return { allowed: false, remaining: 0, used: count };
+            }
+            
+            return { allowed: true, remaining: DAILY_FREE_LIMIT - count, used: count };
+        }
+        
+        // 增加使用次数
+        function incrementDailyCount() {
+            const count = parseInt(localStorage.getItem('dailyCount') || '0');
+            localStorage.setItem('dailyCount', String(count + 1));
+        }
+        
+        // 更新显示
+        function updateDailyLimitDisplay() {
+            const limitCheck = checkDailyLimit();
+            const el = document.getElementById('dailyRemaining');
+            if (el) el.textContent = limitCheck.remaining;
+        }
+        
+        // ==================== 精美卡背 ====================
+        const cardBackSVG = `<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="bbg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#0d0a18"/><stop offset="50%" style="stop-color:#080612"/><stop offset="100%" style="stop-color:#0d0a18"/>
+                </linearGradient>
+                <linearGradient id="bgl" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f5e6c8"/><stop offset="50%" style="stop-color:#d4b896"/><stop offset="100%" style="stop-color:#a8885a"/>
+                </linearGradient>
+            </defs>
+            <rect fill="url(#bbg)" width="100" height="150"/>
+            <g fill="#f5e6c8" opacity="0.3">
+                <circle cx="12" cy="18" r="0.4"/><circle cx="88" cy="22" r="0.4"/><circle cx="22" cy="128" r="0.4"/>
+                <circle cx="78" cy="132" r="0.4"/><circle cx="10" cy="78" r="0.3"/><circle cx="90" cy="72" r="0.3"/>
+            </g>
+            <rect x="4" y="4" width="92" height="142" rx="3" fill="none" stroke="url(#bgl)" stroke-width="0.5" opacity="0.5"/>
+            <rect x="7" y="7" width="86" height="136" rx="2" fill="none" stroke="url(#bgl)" stroke-width="0.3" opacity="0.3"/>
+            <g transform="translate(50,75)" stroke="url(#bgl)" stroke-width="0.8" fill="none" opacity="0.6">
+                <circle cx="0" cy="0" r="30" stroke-width="0.5"/><circle cx="0" cy="0" r="26" stroke-width="0.3"/>
+                <line x1="0" y1="-30" x2="0" y2="-42"/><line x1="0" y1="30" x2="0" y2="42"/>
+                <line x1="-30" y1="0" x2="-42" y2="0"/><line x1="30" y1="0" x2="42" y2="0"/>
+                <polygon points="0,-22 5,-10 18,-10 8,0 12,14 0,7 -12,14 -8,0 -18,-10 -5,-10"/>
+            </g>
+            <circle cx="50" cy="75" r="5" fill="url(#bgl)" opacity="0.5"/>
+            <g stroke="url(#bgl)" stroke-width="0.5" fill="none" opacity="0.4">
+                <path d="M44,6 L50,3 L56,6"/><line x1="50" y1="10" x2="50" y2="16"/>
+                <path d="M44,144 L50,147 L56,144"/><line x1="50" y1="134" x2="50" y2="140"/>
+            </g>
+            <g fill="url(#bgl)" opacity="0.3">
+                <polygon points="18,32 19,34 21,34 19.5,36 20,38 18,36.5 16,38 16.5,36 15,34 17,34"/>
+                <polygon points="82,118 83,120 85,120 83.5,122 84,124 82,122.5 80,124 80.5,122 79,120 81,120"/>
+            </g>
+        </svg>`;
+
+        // ==================== 塔罗牌数据 (78张完整) ====================
+        const tarotData = {
+            major: [
+                {id:0, name:"愚人", meaning:"新的开始、无限可能、纯真自然、冒险精神。愚人代表一张全新的开始牌，象征着天真无邪、纯净以及一腔孤勇的冒险精神。抛开恐惧，勇敢向前。"},
+                {id:1, name:"魔术师", meaning:"创造、意志力、技巧、灵感。魔术师象征着创造力和意志力，他拥有实现目标所需的所有资源和能力。你拥有将梦想变为现实的力量。"},
+                {id:2, name:"女祭司", meaning:"直觉、神秘、智慧、内在声音。女祭司代表内在的智慧和直觉，她守护着隐秘的知识。相信自己的直觉，倾听内心的声音。"},
+                {id:3, name:"女皇", meaning:"丰收、母亲、温柔、创造力、美丽。女皇是丰饶与滋养的象征，代表着爱、慈悲、创意和感官享受。成功、幸福和富足即将到来。"},
+                {id:4, name:"皇帝", meaning:"权威、结构、领导力、稳定。父亲般的原则，代表着权威、领导力和结构。建立秩序，承担责任。"},
+                {id:5, name:"教皇", meaning:"信仰、传统、精神指引、道德。精神层面的领导，代表着信仰、道德、传统和精神教诲。寻找一位导师或精神的指引。"},
+                {id:6, name:"恋人", meaning:"爱、结合、选择、和谐。代表着爱、亲密关系和重大的抉择。需要在两个选择之间做出决定，象征着价值观的统一。"},
+                {id:7, name:"战车", meaning:"意志力、胜利、决心、征服。代表克服障碍的意志力和决心。通过意志力和自律可以获得成功。"},
+                {id:8, name:"力量", meaning:"勇气、力量、毅力、内心力量。代表内心的力量——勇气、耐心、慈悲和毅力。你有足够的力量和勇气面对困难。"},
+                {id:9, name:"隐士", meaning:"内省、孤独、寻找真理、休息。代表内省和独自寻找真理。需要独处的时间来思考和恢复。"},
+                {id:10, name:"命运之轮", meaning:"命运、转变、运气、循环。代表着命运、运气和生命中的重大转变。好运可能即将到来，顺应变化。"},
+                {id:11, name:"正义", meaning:"公正、真相、法律、诚信。代表着正义、公平、真相和诚信。因果报应的牌，行动会带来相应的结果。"},
+                {id:12, name:"倒吊人", meaning:"暂停、牺牲、新的视角、放松。暗示你需要暂停一下，从不同的角度看待问题。牺牲会带来新的洞察。"},
+                {id:13, name:"死神", meaning:"结束、转变、过渡、释放。代表着结束、转变和释放。预示着一个阶段的结束和新阶段的开始。"},
+                {id:14, name:"节制", meaning:"平衡、耐心、目的、节制。代表着平衡、调和与耐心。通过耐心和自制来实现目标。"},
+                {id:15, name:"恶魔", meaning:"束缚、欲望、物质主义、诱惑。代表着束缚、欲望和诱惑。提醒你注意阴影面。"},
+                {id:16, name:"塔", meaning:"突然改变、揭露、混乱、觉醒。代表着突然的改变和混乱。虽然痛苦，但可能是必要的觉醒。"},
+                {id:17, name:"星星", meaning:"希望、信念、目的、恢复。代表着希望、信念和灵感的恢复。伤痛后的疗愈，宇宙的祝福正在流向你。"},
+                {id:18, name:"月亮", meaning:"错觉、恐惧、焦虑、潜意识。代表着恐惧、焦虑和不确定性。潜意识的力量正在运作，需要直面恐惧。"},
+                {id:19, name:"太阳", meaning:"快乐、成功、活力、生命力。代表着快乐、成功和生命力。暗示成功、喜悦和充实的时光。"},
+                {id:20, name:"审判", meaning:"复兴、复活、觉醒、审判。代表着复兴、觉醒和精神的重生。原谅自己和他人、重新开始的机会。"},
+                {id:21, name:"世界", meaning:"完成、成就、整合、圆满。代表着完成、成就和一个循环的圆满结束。庆祝成就和整合收获的时刻。"}
+            ],
+            wands: [
+                {id:"W1",name:"权杖 Ace",meaning:"新项目的开始、创造力的爆发、灵感与热情。令人兴奋的新冒险或机会正在向你招手。"},
+                {id:"W2",name:"权杖 二",meaning:"选择、计划与可能性。需要在多个选项中做出选择，或者开始规划未来的目标。"},
+                {id:"W3",name:"权杖 三",meaning:"进步、扩张与团队合作。正在取得进展，或者在项目中发挥领导作用。"},
+                {id:"W4",name:"权杖 四",meaning:"和平、休息、庆祝与和谐。一个和平稳定的环境，可能有庆祝活动。"},
+                {id:"W5",name:"权杖 五",meaning:"竞争、冲突与挑战。面临竞争或冲突，可能需要与他人争夺资源。"},
+                {id:"W6",name:"权杖 六",meaning:"胜利、荣誉与认可。一个成功或胜利的时刻，努力得到了认可和赞赏。"},
+                {id:"W7",name:"权杖 七",meaning:"挑战、竞争与坚持。正在捍卫自己的立场，或者面对挑战需要坚持。"},
+                {id:"W8",name:"权杖 八",meaning:"速度、行动与迅速。事情进展很快，需要快速行动，抓住机会。"},
+                {id:"W9",name:"权杖 九",meaning:"韧性、力量与坚持。正在面对困难，但韧性和力量会帮助你度过难关。"},
+                {id:"W10",name:"权杖 十",meaning:"负担、压力与过度劳累。承受了太多的压力或责任，需要学习放下。"},
+                {id:"W11",name:"权杖 侍从",meaning:"热情、探索与行动。充满热情的年轻人或新的想法，新的开始。"},
+                {id:"W12",name:"权杖 骑士",meaning:"热情、行动与冲动。充满热情和行动力的人，或者一个充满活力的项目。"},
+                {id:"W13",name:"权杖 皇后",meaning:"自信、热情与独立。自信、热情、有魅力，提醒你发挥自己的力量。"},
+                {id:"W14",name:"权杖 国王",meaning:"领导力、远见与荣誉。成功的领导者或者你正在展现领导才能。"}
+            ],
+            cups: [
+                {id:"C1",name:"圣杯 Ace",meaning:"情感的开启、爱与喜悦。一段新感情或者情感上的满足与快乐。"},
+                {id:"C2",name:"圣杯 二",meaning:"爱情、伙伴关系与和谐。一段浪漫关系的开始或现有的亲密关系的和谐。"},
+                {id:"C3",name:"圣杯 三",meaning:"庆祝、友谊与社交。一个欢乐的时刻，与朋友一起庆祝。"},
+                {id:"C4",name:"圣杯 四",meaning:"冷漠、抑郁与不满足。倦怠或冷漠的状态，或者对现状感到不满足。"},
+                {id:"C5",name:"圣杯 五",meaning:"损失、悲伤与遗憾。失落或悲伤的时期，但也预示着新的开始。"},
+                {id:"C6",name:"圣杯 六",meaning:"怀旧、回忆与纯真。回到过去或者与过去的人事物重逢。"},
+                {id:"C7",name:"圣杯 七",meaning:"幻想、选择与诱惑。面临多个吸引人的选择，在幻想与现实之间徘徊。"},
+                {id:"C8",name:"圣杯 八",meaning:"放弃、离开与追求更深层。离开一段关系或情况，以追求更深层的目标。"},
+                {id:"C9",name:"圣杯 九",meaning:"愿望实现、满足与快乐。愿望可能即将实现，带来满足和快乐。"},
+                {id:"C10",name:"圣杯 十",meaning:"家庭和谐、团圆与幸福。家庭和睦、情感满足，生活幸福美满。"},
+                {id:"C11",name:"圣杯 侍从",meaning:"好奇心、可能性与探索。浪漫或创造性的机会正在出现。"},
+                {id:"C12",name:"圣杯 骑士",meaning:"浪漫、魅力与想象。一个浪漫的追求者或者一个充满想象的计划。"},
+                {id:"C13",name:"圣杯 皇后",meaning:"温暖、接纳与直觉。充满爱和关怀，或者你正在发挥爱的力量。"},
+                {id:"C14",name:"圣杯 国王",meaning:"宽宏、节制与成熟。成熟、有魅力、情感平衡的人或者你正在展现这种品质。"}
+            ],
+            swords: [
+                {id:"S1",name:"宝剑 Ace",meaning:"清晰、真相与精神力量。思维清晰，可能预示着一个重要的想法或决定。"},
+                {id:"S2",name:"宝剑 二",meaning:"困难的决定、犹豫不决。正在一个困难的决定面前，需要权衡利弊。"},
+                {id:"S3",name:"宝剑 三",meaning:"心碎、悲伤与背叛。一段痛苦的经历，可能是失去或背叛带来的伤害。"},
+                {id:"S4",name:"宝剑 四",meaning:"休息、恢复与内省。需要休息和恢复，或者一个安静反思的时期。"},
+                {id:"S5",name:"宝剑 五",meaning:"失败、失落与冲突。一次失败或冲突，可能是竞争中失利。"},
+                {id:"S6",name:"宝剑 六",meaning:"过渡、移动与离开。一段旅程或变化，正在离开过去走向新的开始。"},
+                {id:"S7",name:"宝剑 七",meaning:"策略、智谋与狡诈。需要运用智慧和策略，可能涉及欺骗或策略性行动。"},
+                {id:"S8",name:"宝剑 八",meaning:"限制、囚禁与困顿。感到被困住或者受到限制，需要找到突破口。"},
+                {id:"S9",name:"宝剑 九",meaning:"恐惧、焦虑与噩梦。深深的忧虑或恐惧，潜意识中的焦虑正在浮现。"},
+                {id:"S10",name:"宝剑 十",meaning:"结束、痛苦与崩溃。一个阶段的痛苦结束，虽然艰难但预示着新的开始。"},
+                {id:"S11",name:"宝剑 侍从",meaning:"好奇心、沟通与警觉。善于沟通、好奇的人，或者需要更加警觉。"},
+                {id:"S12",name:"宝剑 骑士",meaning:"挑战、行动与冲动。具有攻击性或者冲动的人，或者需要迅速行动。"},
+                {id:"S13",name:"宝剑 皇后",meaning:"独立、清晰与直言。独立、聪明、直接的人或者你正在展现这些品质。"},
+                {id:"S14",name:"宝剑 国王",meaning:"权威、真理与道德。公正、有权威的人或者你正在运用智慧和道德判断。"}
+            ],
+            pentacles: [
+                {id:"P1",name:"星币 Ace",meaning:"新的财务机会、繁荣与富足。物质基础或者一个有利可图的机会。"},
+                {id:"P2",name:"星币 二",meaning:"平衡、适应性与资源管理。需要平衡多个项目或者有效管理资源。"},
+                {id:"P3",name:"星币 三",meaning:"技能、学习与工作。在工作或学习中取得进展，或者正在发展新的技能。"},
+                {id:"P4",name:"星币 四",meaning:"节俭、占有欲与安全。对财务的谨慎态度，或者对物质的安全感的需求。"},
+                {id:"P5",name:"星币 五",meaning:"困难、贫困与失落。经济上的困难或者社会边缘化，但也显示内在的韧性。"},
+                {id:"P6",name:"星币 六",meaning:"给予、接收与慷慨。财务上的给予或接收，或者与他人分享资源。"},
+                {id:"P7",name:"星币 七",meaning:"耐心、等待与投资。需要耐心等待投资回报，或者在长期项目中取得进展。"},
+                {id:"P8",name:"星币 八",meaning:"技能、精通与奉献。在某个领域发展专长，或者通过努力获得精通。"},
+                {id:"P9",name:"星币 九",meaning:"繁荣、自给自足与独立。财务上的成功和独立，或者一个丰收的时刻。"},
+                {id:"P10",name:"星币 十",meaning:"财富、遗产与家庭。物质上的成功，家庭和谐，或者代际财富。"},
+                {id:"P11",name:"星币 侍从",meaning:"学习、技能与发展。正在学习财务或实用技能，或者新的学习机会。"},
+                {id:"P12",name:"星币 骑士",meaning:"努力、可靠与保守。勤奋可靠的人或者需要脚踏实地的努力。"},
+                {id:"P13",name:"星币 皇后",meaning:"繁荣、慷慨与自给自足。财务上的成功和富足，或者你正在享受努力的成果。"},
+                {id:"P14",name:"星币 国王",meaning:"财富、慷慨与责任。财务上的成功和责任，或者你正在展现商业智慧。"}
+            ]
+        };
+
+        // ==================== 生成卡面SVG ====================
+        function generateCardSVG(card) {
+            if (card.type === 'major') return generateMajorSVG(card);
+            return generateMinorSVG(card);
+        }
+
+        function generateMajorSVG(card) {
+            const id = card.id;
+            const bg = `<linearGradient id="mbg${id}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#e8e0d0"/><stop offset="100%" style="stop-color:#f5f0e6"/></linearGradient>`;
+            const gl = `<linearGradient id="mgl${id}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#c9a84c"/><stop offset="100%" style="stop-color:#8b6914"/></linearGradient>`;
+            
+            let scene = '';
+            const name = card.name;
+            
+            // 根据每张牌设计独特场景
+            if (id === 0) { // 愚人 - 悬崖边的人+狗+悬崖
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <circle cx="78" cy="28" r="10" fill="#c9a84c"/>
+                <g stroke="#c9a84c" stroke-width="0.6"><line x1="78" y1="12" x2="78" y2="6"/><line x1="65" y1="22" x2="58" y2="18"/><line x1="91" y1="22" x2="98" y2="18"/></g>
+                <path d="M0 115 L25 95 L45 108 L60 90 L85 105 L100 88 L100 150 L0 150 Z" fill="#d8d0c0"/>
+                <g fill="#1a1525">
+                    <path d="M55 75 L50 130 L60 133 L70 130 L68 75 Q62 70 55 75"/>
+                    <ellipse cx="60" cy="65" rx="9" ry="11"/>
+                    <path d="M50 72 Q60 60 72 72 L70 76 Q60 66 50 72"/>
+                    <path d="M50 80 L40 68 L42 65 L52 76"/>
+                    <path d="M70 80 L82 95 L78 98 L68 85"/>
+                    <path d="M54 130 L52 148 L58 150 L58 133"/><path d="M66 130 L68 148 L62 150 L62 133"/>
+                </g>
+                <g stroke="#c9a84c" stroke-width="0.4" fill="none"><path d="M52 95 Q60 90 70 95"/><path d="M54 115 Q60 110 68 115"/></g>
+                <g fill="#1a1525">
+                    <ellipse cx="82" cy="138" rx="10" ry="5"/>
+                    <ellipse cx="88" cy="135" rx="4" ry="3"/>
+                    <path d="M73 138 L90 138"/>
+                </g>`;
+            } else if (id === 1) { // 魔术师 - 桌子+元素
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <rect x="22" y="85" width="56" height="50" fill="none" stroke="#8b6914" stroke-width="2" rx="2"/>
+                <line x1="26" y1="80" x2="74" y2="80" stroke="#8b6914" stroke-width="2"/>
+                <path d="M28 65 L50 50 L72 65" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                <circle cx="50" cy="100" r="10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                <g fill="#c9a84c" opacity="0.6"><circle cx="32" cy="108" r="4"/><circle cx="68" cy="108" r="4"/></g>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="50" rx="10" ry="12"/>
+                    <path d="M38 58 L50 55 L62 58 L58 75 L42 75 Z"/>
+                    <line x1="50" y1="67" x2="50" y2="78" stroke="#1a1525" stroke-width="1"/>
+                </g>
+                <g fill="none" stroke="#c9a84c" stroke-width="0.5">
+                    <line x1="30" y1="125" x2="35" y2="120"/><line x1="70" y1="125" x2="65" y2="120"/>
+                    <line x1="50" y1="135" x2="50" y2="140"/>
+                </g>`;
+            } else if (id === 2) { // 女祭司 - 月亮+柱子
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <rect x="15" y="40" width="8" height="95" fill="#d8d0c0"/>
+                <rect x="77" y="40" width="8" height="95" fill="#d8d0c0"/>
+                <path d="M10 35 L50 25 L90 35 L85 45 L15 45 Z" fill="#d8d0c0"/>
+                <circle cx="50" cy="25" r="4" fill="#c9a84c"/>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="70" rx="12" ry="14"/>
+                    <path d="M36 82 L50 78 L64 82 L60 115 L40 115 Z"/>
+                </g>
+                <g stroke="#c9a84c" stroke-width="0.5"><path d="M38 90 Q50 85 62 90"/><path d="M40 105 Q50 100 60 105"/></g>
+                <circle cx="50" cy="15" r="12" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                <path d="M58 12 Q63 15 58 20" fill="#c9a84c" opacity="0.6"/>`;
+            } else if (id === 3) { // 女皇 - 坐姿+麦穗+心
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="55" rx="12" ry="14"/>
+                    <path d="M30 65 L25 140 L75 140 L70 65 Q50 58 30 65"/>
+                    <path d="M40 72 Q50 65 60 72 Q56 82 50 78 Q44 82 40 72"/>
+                </g>
+                <g stroke="#c9a84c" stroke-width="0.5" fill="none">
+                    <path d="M35 85 Q50 78 65 85"/><path d="M30 105 Q50 95 70 105"/>
+                    <path d="M28 125 Q50 115 72 125"/>
+                </g>
+                <g fill="#c9a84c" opacity="0.5">
+                    <path d="M20 45 Q25 35 20 25 Q28 35 20 45"/>
+                    <path d="M80 45 Q75 35 80 25 Q72 35 80 45"/>
+                    <path d="M18 55 Q23 48 18 40"/><path d="M82 55 Q77 48 82 40"/>
+                </g>`;
+            } else if (id === 4) { // 皇帝 - 坐姿+宝球+胡子
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="50" rx="10" ry="12"/>
+                    <path d="M30 60 L28 140 L72 140 L70 60 Q50 55 30 60"/>
+                    <path d="M28 55 L50 45 L72 55 L68 62 L32 62 Z"/>
+                </g>
+                <circle cx="50" cy="70" r="8" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                <g fill="#c9a84c" opacity="0.4"><circle cx="30" cy="120" r="5"/><circle cx="70" cy="120" r="5"/></g>
+                <path d="M30 130 Q50 120 70 130" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+            } else if (id === 5) { // 教皇 - 双手+三
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="60" rx="12" ry="14"/>
+                    <path d="M32 72 L30 145 L70 145 L68 72 Q50 66 32 72"/>
+                    <path d="M32 68 L50 58 L68 68 L64 78 L36 78 Z"/>
+                </g>
+                <g fill="none" stroke="#c9a84c" stroke-width="0.5">
+                    <path d="M40 85 Q50 80 60 85"/><path d="M38 100 Q50 95 62 100"/>
+                </g>
+                <g fill="#c9a84c" opacity="0.6">
+                    <path d="M42 130 L45 125 L48 130 L45 135 Z"/>
+                    <path d="M52 130 L55 125 L58 130 L55 135 Z"/>
+                    <path d="M62 130 L65 125 L68 130 L65 135 Z"/>
+                </g>`;
+            } else if (id === 6) { // 恋人 - 天使+男女
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <circle cx="50" cy="20" r="8" fill="#c9a84c"/>
+                <g fill="#e8dcc8"><ellipse cx="50" cy="38" rx="6" ry="7"/><path d="M44 42 L50 38 L56 42 L54 55 L46 55 Z"/></g>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="32" rx="5" ry="6"/>
+                    <path d="M38 58 L35 115 L50 118 L65 115 L62 58 Q50 54 38 58"/>
+                    <path d="M35 65 L25 52 L27 49 L38 60"/>
+                    <path d="M65 65 L75 52 L77 55 L64 66"/>
+                </g>
+                <g fill="#1a1525">
+                    <ellipse cx="20" cy="78" rx="7" ry="9"/>
+                    <path d="M12 85 L10 140 L30 143 L32 85 Q22 80 12 85"/>
+                    <path d="M12 92 L5 80 L7 77 L14 88"/>
+                </g>
+                <g fill="#1a1525">
+                    <ellipse cx="80" cy="78" rx="7" ry="9"/>
+                    <path d="M88 85 L90 140 L70 143 L68 85 Q78 80 88 85"/>
+                    <path d="M88 92 L95 80 L93 77 L86 88"/>
+                </g>`;
+            } else if (id === 7) { // 战车
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <rect x="20" y="55" width="60" height="45" fill="none" stroke="#1a1525" stroke-width="3"/>
+                <path d="M15 50 Q50 35 85 50 L80 58 L20 58 Z" fill="#1a1525"/>
+                <g fill="#1a1525">
+                    <ellipse cx="20" cy="105" rx="8" ry="10"/>
+                    <ellipse cx="80" cy="105" rx="8" ry="10"/>
+                </g>
+                <path d="M44 68 L56 68 L54 78 L50 76 L46 78 Z" fill="#c9a84c"/>
+                <line x1="30" y1="62" x2="35" y2="55" stroke="#1a1525" stroke-width="2"/>
+                <line x1="70" y1="62" x2="65" y2="55" stroke="#1a1525" stroke-width="2"/>`;
+            } else if (id === 8) { // 力量 - 狮子+∞
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#1a1525">
+                    <path d="M30 70 Q50 55 70 70 Q65 90 50 82 Q35 90 30 70"/>
+                    <ellipse cx="50" cy="68" rx="8" ry="10"/>
+                </g>
+                <text x="50" y="115" text-anchor="middle" font-size="30" fill="#c9a84c" opacity="0.3">∞</text>
+                <g stroke="#c9a84c" stroke-width="1" fill="none"><path d="M35 95 Q50 85 65 95"/></g>`;
+            } else if (id === 9) { // 隐士 - 提灯+人
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="55" rx="10" ry="12"/>
+                    <path d="M38 65 L35 145 L65 145 L62 65 Q50 60 38 65"/>
+                    <line x1="50" y1="75" x2="50" y2="125" stroke="#1a1525" stroke-width="2"/>
+                    <line x1="50" y1="88" x2="32" y2="78" stroke="#1a1525" stroke-width="1.5"/>
+                </g>
+                <circle cx="28" cy="72" r="8" fill="#c9a84c" opacity="0.5"/>
+                <circle cx="28" cy="72" r="4" fill="#c9a84c"/>
+                <circle cx="50" cy="130" r="6" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+            } else if (id === 10) { // 命运之轮
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <circle cx="50" cy="75" r="35" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                <circle cx="50" cy="75" r="28" fill="none" stroke="#c9a84c" stroke-width="1"/>
+                <line x1="50" y1="40" x2="50" y2="110" stroke="#c9a84c" stroke-width="1.5"/>
+                <line x1="15" y1="75" x2="85" y2="75" stroke="#c9a84c" stroke-width="1.5"/>
+                <circle cx="50" cy="75" r="10" fill="#c9a84c"/>
+                <g fill="#c9a84c"><polygon points="50,28 52,33 57,33 53,36 55,41 50,38 45,41 47,36 43,33 48,33"/></g>`;
+            } else if (id === 11) { // 正义
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="55" rx="10" ry="12"/>
+                    <path d="M32 65 L30 140 L70 140 L68 65 Q50 60 32 65"/>
+                    <path d="M32 60 L50 52 L68 60 L64 68 L36 68 Z"/>
+                </g>
+                <line x1="50" y1="80" x2="50" y2="115" stroke="#c9a84c" stroke-width="2"/>
+                <rect x="35" y="115" width="30" height="22" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                <line x1="50" y1="80" x2="20" y2="65" stroke="#c9a84c" stroke-width="1.5"/>
+                <line x1="50" y1="80" x2="80" y2="65" stroke="#c9a84c" stroke-width="1.5"/>`;
+            } else if (id === 12) { // 倒吊人
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <line x1="50" y1="25" x2="50" y2="55" stroke="#1a1525" stroke-width="3"/>
+                <rect x="30" y="55" width="40" height="70" fill="none" stroke="#1a1525" stroke-width="2"/>
+                <g fill="#1a1525">
+                    <circle cx="50" cy="78" r="10"/>
+                    <line x1="35" y1="90" x2="35" y2="120" stroke="#1a1525" stroke-width="2"/>
+                    <line x1="65" y1="90" x2="65" y2="120" stroke="#1a1525" stroke-width="2"/>
+                    <line x1="35" y1="100" x2="25" y2="115" stroke="#1a1525" stroke-width="2"/>
+                    <line x1="65" y1="100" x2="75" y2="115" stroke="#1a1525" stroke-width="2"/>
+                </g>`;
+            } else if (id === 13) { // 死神
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <circle cx="50" cy="28" r="12" fill="#c9a84c" opacity="0.8"/>
+                <rect x="78" y="45" width="4" height="90" fill="#1a1525"/>
+                <path d="M78 48 L78 20 L100 28 L100 55 Z" fill="#1a1525"/>
+                <g fill="#1a1525">
+                    <path d="M45 55 Q25 65 20 90 Q25 120 45 125 L65 125 Q85 120 90 90 Q85 65 65 55 Q55 52 45 55"/>
+                    <path d="M60 40 L75 20 L78 25 L65 45"/>
+                </g>
+                <g fill="#1a1525">
+                    <ellipse cx="18" cy="130" rx="8" ry="10"/>
+                    <path d="M10 138 L8 148 L28 150 L30 140 Q20 136 10 138"/>
+                </g>
+                <g fill="#1a1525">
+                    <ellipse cx="85" cy="130" rx="8" ry="10"/>
+                    <path d="M77 138 L75 148 L95 150 L97 140 Q87 136 77 138"/>
+                </g>`;
+            } else if (id === 14) { // 节制
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="50" rx="10" ry="12"/>
+                    <path d="M38 60 L35 140 L65 140 L62 60 Q50 55 38 60"/>
+                    <path d="M42 95 Q50 88 58 95 L56 115 Q50 120 44 115 Z" fill="none" stroke="#1a1525" stroke-width="1.5"/>
+                </g>
+                <path d="M28 105 Q50 95 72 105" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                <path d="M35 130 Q50 120 65 130" fill="none" stroke="#c9a84c" stroke-width="1"/>`;
+            } else if (id === 15) { // 恶魔
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#1a1525">
+                    <path d="M35 35 L50 28 L65 35 L60 42 L40 42 Z"/>
+                    <circle cx="38" cy="32" r="4"/><circle cx="62" cy="32" r="4"/>
+                    <ellipse cx="50" cy="65" rx="15" ry="18"/>
+                    <path d="M35 82 L32 140 L68 140 L65 82 Q50 75 35 82"/>
+                    <line x1="50" y1="100" x2="50" y2="135" stroke="#1a1525" stroke-width="2"/>
+                </g>
+                <path d="M30 115 Q50 105 70 115" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+            } else if (id === 16) { // 塔
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <path d="M40 25 L50 12 L60 25 L56 35 L44 35 Z" fill="#c9a84c"/>
+                <rect x="38" y="30" width="24" height="110" fill="#1a1525"/>
+                <line x1="38" y1="50" x2="62" y2="50" stroke="#d8d0c0" stroke-width="1"/>
+                <line x1="38" y1="75" x2="62" y2="75" stroke="#d8d0c0" stroke-width="1"/>
+                <line x1="38" y1="100" x2="62" y2="100" stroke="#d8d0c0" stroke-width="1"/>
+                <g stroke="#c9a84c" stroke-width="2">
+                    <line x1="50" y1="8" x2="35" y2="30"/>
+                    <line x1="50" y1="8" x2="65" y2="30"/>
+                    <line x1="50" y1="8" x2="50" y2="35"/>
+                </g>`;
+            } else if (id === 17) { // 星星
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <g fill="#c9a84c">
+                    <polygon points="50,12 51.5,18 58,18 52.5,22 54.5,28 50,25 45.5,28 47.5,22 42,18 48.5,18"/>
+                    <polygon points="20,35 21,38 24,38 21.5,40 22.5,43 20,41.5 17.5,43 18.5,40 16,38 19,38" opacity="0.5"/>
+                    <polygon points="80,40 81,43 84,43 81.5,45 82.5,48 80,46.5 77.5,48 78.5,45 76,43 79,43" opacity="0.5"/>
+                </g>
+                <g fill="#1a1525">
+                    <ellipse cx="50" cy="65" rx="10" ry="12"/>
+                    <path d="M40 75 L38 140 L62 140 L60 75 Q50 70 40 75"/>
+                    <line x1="50" y1="85" x2="30" y2="75" stroke="#1a1525" stroke-width="2"/>
+                    <line x1="50" y1="85" x2="70" y2="75" stroke="#1a1525" stroke-width="2"/>
+                </g>
+                <path d="M25 130 Q50 120 75 130" fill="none" stroke="#c9a84c" stroke-width="1"/>`;
+            } else if (id === 18) { // 月亮
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <circle cx="50" cy="30" r="15" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                <path d="M62 25 Q70 30 62 38" fill="#c9a84c" opacity="0.6"/>
+                <g fill="#1a1525">
+                    <path d="M25 80 Q50 60 75 80 Q70 100 50 95 Q30 100 25 80"/>
+                    <path d="M35 115 Q50 105 65 115 Q60 128 50 122 Q40 128 35 115"/>
+                </g>
+                <g fill="#c9a84c" opacity="0.3">
+                    <circle cx="15" cy="90" r="1"/><circle cx="85" cy="85" r="1"/>
+                    <circle cx="10" cy="70" r="0.8"/><circle cx="90" cy="65" r="0.8"/>
+                </g>`;
+            } else if (id === 19) { // 太阳
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <circle cx="50" cy="50" r="20" fill="#c9a84c" opacity="0.3"/>
+                <circle cx="50" cy="50" r="14" fill="#c9a84c" opacity="0.6"/>
+                <g stroke="#c9a84c" stroke-width="2">
+                    <line x1="50" y1="18" x2="50" y2="28"/><line x1="50" y1="72" x2="50" y2="82"/>
+                    <line x1="18" y1="50" x2="28" y2="50"/><line x1="72" y1="50" x2="82" y2="50"/>
+                    <line x1="25" y1="25" x2="32" y2="32"/><line x1="68" y1="68" x2="75" y2="75"/>
+                    <line x1="25" y1="75" x2="32" y2="68"/><line x1="68" y1="32" x2="75" y2="25"/>
+                </g>
+                <path d="M30 105 Q50 95 70 105" fill="none" stroke="#1a1525" stroke-width="2"/>
+                <path d="M35 120 Q50 112 65 120" fill="none" stroke="#1a1525" stroke-width="1.5"/>`;
+            } else if (id === 20) { // 审判
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <path d="M50 15 L60 28 L50 42 L40 28 Z" fill="#c9a84c"/>
+                <circle cx="50" cy="26" r="5" fill="#f5f0e6"/>
+                <line x1="25" y1="50" x2="75" y2="50" stroke="#c9a84c" stroke-width="2"/>
+                <g fill="#1a1525">
+                    <circle cx="30" cy="75" r="8"/><circle cx="50" cy="75" r="8"/><circle cx="70" cy="75" r="8"/>
+                </g>
+                <path d="M30 82 L50 70 L70 82" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                <path d="M35 100 Q50 92 65 100" fill="none" stroke="#c9a84c" stroke-width="1"/>`;
+            } else { // 世界
+                scene = `
+                <rect fill="url(#mbg${id})" width="100" height="150"/>
+                <ellipse cx="50" cy="75" rx="38" ry="45" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                <ellipse cx="50" cy="75" rx="28" ry="35" fill="none" stroke="#c9a84c" stroke-width="1"/>
+                <line x1="50" y1="30" x2="50" y2="120" stroke="#c9a84c" stroke-width="1"/>
+                <line x1="12" y1="75" x2="88" y2="75" stroke="#c9a84c" stroke-width="1"/>
+                <g fill="#c9a84c">
+                    <polygon points="50,32 52,37 57,37 53,41 55,46 50,43 45,46 47,41 43,37 48,37"/>
+                </g>
+                <circle cx="50" cy="75" r="12" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                <polygon points="50,68 52,73 57,73 53,77 55,82 50,79 45,82 47,77 43,73 48,73" fill="#c9a84c" opacity="0.5"/>`;
+            }
+            
+            return `<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg"><defs>${bg}${gl}</defs>${scene}</svg>`;
+        }
+
+        function generateMinorSVG(card) {
+            const suit = card.id.replace(/\d/g,'');
+            const num = parseInt(card.id.match(/\d+/)[0]);
+            const bg = `<linearGradient id="mbg${card.id}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#faf6ed"/><stop offset="100%" style="stop-color:#f0ebe0"/></linearGradient>`;
+            
+            let scene = `<rect fill="url(#mbg${card.id})" width="100" height="150"/>`;
+            
+            if (suit === 'W') {
+                // 权杖 - 每张不同场景
+                if (num === 1) { // 云中手握杖
+                    scene += `<g stroke="#8b6914" stroke-width="3"><line x1="50" y1="20" x2="50" y2="130"/></g>
+                    <path d="M50 20 L35 40 M50 20 L65 40" stroke="#8b6914" stroke-width="2.5"/>
+                    <circle cx="50" cy="20" r="8" fill="#c9a84c" stroke="#8b6914"/>
+                    <g stroke="#8b6914" stroke-width="0.5" fill="none" opacity="0.3"><path d="M30 50 Q40 45 30 40"/><path d="M70 55 Q60 50 70 45"/></g>`;
+                } else if (num === 2) { // 年轻人看远方
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="50" cy="55" rx="10" ry="12"/>
+                        <path d="M38 65 L35 130 L65 130 L62 65 Q50 60 38 65"/>
+                    </g>
+                    <line x1="50" y1="75" x2="75" y2="55" stroke="#8b6914" stroke-width="3"/>
+                    <circle cx="80" cy="50" r="6" fill="#c9a84c"/>`;
+                } else if (num === 3) { // 领袖眺望
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="50" cy="48" rx="9" ry="11"/>
+                        <path d="M38 57 L35 120 L65 120 L62 57 Q50 52 38 57"/>
+                    </g>
+                    <line x1="50" y1="70" x2="50" y2="100" stroke="#8b6914" stroke-width="3"/>
+                    <g stroke="#8b6914" stroke-width="2"><line x1="35" y1="100" x2="50" y2="90"/><line x1="65" y1="100" x2="50" y2="90"/></g>`;
+                } else if (num === 4) { // 和平家园
+                    scene += `<rect x="30" y="90" width="40" height="50" fill="none" stroke="#8b6914" stroke-width="2"/>
+                    <path d="M25 90 L50 70 L75 90" fill="none" stroke="#8b6914" stroke-width="2"/>
+                    <g fill="#1a1525">
+                        <path d="M35 130 L33 145 L45 147 L43 132"/>
+                        <path d="M65 130 L67 145 L55 147 L57 132"/>
+                    </g>`;
+                } else if (num === 5) { // 争夺战
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="35" cy="60" rx="10" ry="12"/>
+                        <ellipse cx="65" cy="60" rx="10" ry="12"/>
+                    </g>
+                    <line x1="35" y1="75" x2="35" y2="110" stroke="#8b6914" stroke-width="3"/>
+                    <line x1="65" y1="75" x2="65" y2="110" stroke="#8b6914" stroke-width="3"/>
+                    <line x1="35" y1="60" x2="55" y2="45" stroke="#8b6914" stroke-width="2"/>
+                    <line x1="65" y1="60" x2="45" y2="45" stroke="#8b6914" stroke-width="2"/>`;
+                } else if (num === 6) { // 胜利旗帜
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="55" rx="9" ry="11"/><path d="M40 64 L38 130 L62 130 L60 64 Q50 59 40 64"/></g>
+                    <line x1="50" y1="75" x2="50" y2="110" stroke="#8b6914" stroke-width="3"/>
+                    <path d="M50 75 L50 45 L75 55 L75 85 Z" fill="#c9a84c"/>
+                    <path d="M55 60 L70 55 L55 65 L70 70 L55 75" fill="none" stroke="#f5f0e6" stroke-width="0.5"/>`;
+                } else if (num === 7) { // 守卫
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="50" rx="10" ry="12"/><path d="M38 60 L35 130 L65 130 L62 60 Q50 55 38 60"/></g>
+                    <line x1="50" y1="70" x2="50" y2="100" stroke="#8b6914" stroke-width="3"/>
+                    <g stroke="#8b6914" stroke-width="2"><line x1="35" y1="100" x2="50" y2="85"/><line x1="65" y1="100" x2="50" y2="85"/></g>
+                    <line x1="50" y1="60" x2="30" y2="50" stroke="#8b6914" stroke-width="2"/>`;
+                } else if (num === 8) { // 飞棒
+                    scene += `<g stroke="#8b6914" stroke-width="2.5"><line x1="20 50" x2="80" y2="50"/><line x1="20 70" x2="80" y2="70"/><line x1="20 90" x2="80" y2="90"/></g>
+                    <line x1="50" y1="30" x2="50" y2="10" stroke="#8b6914" stroke-width="2"/>
+                    <circle cx="50" cy="50" r="8" fill="#c9a84c"/>`;
+                } else if (num === 9) { // 防守城堡
+                    scene += `<rect x="25" y="60" width="50" height="80" fill="none" stroke="#1a1525" stroke-width="2"/>
+                    <g fill="#1a1525"><ellipse cx="50" cy="48" rx="9" ry="11"/><path d="M40 57 L38 130 L62 130 L60 57 Q50 52 40 57"/></g>
+                    <line x1="50" y1="68" x2="50" y2="100" stroke="#8b6914" stroke-width="3"/>`;
+                } else if (num === 10) { // 负重前行
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="50" cy="45" rx="10" ry="12"/>
+                        <path d="M38 55 L30 140 L70 140 L62 55 Q50 50 38 55"/>
+                    </g>
+                    <line x1="40" y1="70" x2="35" y2="130" stroke="#8b6914" stroke-width="2.5"/>
+                    <line x1="60" y1="70" x2="65" y2="130" stroke="#8b6914" stroke-width="2.5"/>`;
+                } else { // 人物牌
+                    const titles = ['侍从','骑士','皇后','国王'];
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="50" cy="50" rx="${num===11?10:11}" ry="${num===11?12:13}"/>
+                        <path d="M${num===11?'38':'35'} 60 L${num===11?'35':'32'} 140 L${num===11?'65':'68'} 140 L${num===11?'62':'65'} 60 Q50 ${num===11?'55':'52'} ${num===11?'38':'35'} 60"/>
+                    </g>
+                    <line x1="50" y1="75" x2="50" y2="110" stroke="#8b6914" stroke-width="2.5"/>
+                    <text x="50" y="25" text-anchor="middle" font-size="8" fill="#8b6914">${titles[num-11]}</text>`;
+                }
+            } else if (suit === 'C') {
+                // 圣杯 - 每张不同场景
+                if (num === 1) { // 云中手握杯
+                    scene += `<path d="M35 40 L50 40 L47 100 Q42 112 35 100 Z" fill="none" stroke="#2a5a8a" stroke-width="2.5"/>
+                    <circle cx="50" cy="25" r="8" fill="#c9a84c"/>
+                    <g fill="#2a5a8a" opacity="0.3"><path d="M40 60 Q45 55 40 50"/><path d="M55 65 Q60 60 55 55"/></g>`;
+                } else if (num === 2) { // 男女握手
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="35" cy="60" rx="10" ry="12"/>
+                        <ellipse cx="65" cy="60" rx="10" ry="12"/>
+                    </g>
+                    <path d="M35 75 L65 75" stroke="#2a5a8a" stroke-width="2"/>
+                    <circle cx="50" cy="85" r="12" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+                } else if (num === 3) { // 三个女人
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="30" cy="65" rx="8" ry="10"/>
+                        <ellipse cx="50" cy="60" rx="8" ry="10"/>
+                        <ellipse cx="70" cy="65" rx="8" ry="10"/>
+                    </g>
+                    <path d="M25 80 Q50 70 75 80" fill="none" stroke="#2a5a8a" stroke-width="2"/>`;
+                } else if (num === 4) { // 忧郁的人
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="60" rx="12" ry="14"/><path d="M36 72 L32 130 L68 130 L64 72 Q50 66 36 72"/></g>
+                    <path d="M45 82 Q50 78 55 82" fill="none" stroke="#c9a84c" stroke-width="1"/>
+                    <path d="M30 115 Q50 105 70 115" fill="none" stroke="#c9a84c" stroke-width="1"/>`;
+                } else if (num === 5) { // 悲伤的人
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="65" rx="12" ry="14"/><path d="M36 77 L30 140 L70 140 L64 77 Q50 71 36 77"/></g>
+                    <path d="M45 87 Q50 83 55 87" fill="none" stroke="#c9a84c" stroke-width="1"/>
+                    <path d="M25 115 Q50 100 75 115" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+                } else if (num === 6) { // 男孩与魔术师
+                    scene += `<g fill="#1a1525"><ellipse cx="70" cy="60" rx="10" ry="12"/><path d="M58 70 L55 130 L85 130 L82 70 Q70 65 58 70"/></g>
+                    <g fill="#1a1525"><ellipse cx="30" cy="90" rx="7" ry="9"/></g>`;
+                } else if (num === 7) { // 幻影选择
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="55" rx="10" ry="12"/><path d="M38 65 L35 140 L65 140 L62 65 Q50 60 38 65"/></g>
+                    <g fill="#c9a84c" opacity="0.5">
+                        <ellipse cx="25" cy="80" rx="8" ry="10"/>
+                        <ellipse cx="50" cy="75" rx="8" ry="10"/>
+                        <ellipse cx="75" cy="80" rx="8" ry="10"/>
+                    </g>`;
+                } else if (num === 8) { // 女子离开
+                    scene += `<g fill="#1a1525"><ellipse cx="75" cy="60" rx="10" ry="12"/><path d="M63 70 L60 140 L90 140 L87 70 Q75 65 63 70"/></g>
+                    <g stroke="#2a5a8a" stroke-width="2" fill="none">
+                        <path d="M20 100 Q30 90 40 100"/><path d="M25 115 Q35 105 45 115"/>
+                    </g>`;
+                } else if (num === 9) { // 满足的贵妇
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="50" rx="12" ry="14"/><path d="M35 62 L30 140 L70 140 L65 62 Q50 56 35 62"/></g>
+                    <path d="M42 72 Q50 68 58 72" fill="none" stroke="#c9a84c" stroke-width="1"/>
+                    <g stroke="#2a5a8a" stroke-width="1" fill="none" opacity="0.3">
+                        <path d="M30 100 Q40 90 50 100"/><path d="M50 100 Q60 90 70 100"/>
+                    </g>`;
+                } else if (num === 10) { // 家庭与彩虹
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="35" cy="70" rx="9" ry="11"/>
+                        <ellipse cx="65" cy="70" rx="9" ry="11"/>
+                    </g>
+                    <path d="M25 85 Q50 75 75 85" fill="none" stroke="#2a5a8a" stroke-width="2"/>
+                    <g fill="#c9a84c" opacity="0.4"><circle cx="20" cy="45" r="5"/><circle cx="80" cy="45" r="5"/></g>
+                    <path d="M15 50 Q50 35 85 50" fill="none" stroke="#c9a84c" stroke-width="0.5"/>`;
+                } else { // 人物牌
+                    const titles = ['侍从','骑士','皇后','国王'];
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="50" cy="50" rx="${num===11?10:11}" ry="${num===11?12:13}"/>
+                        <path d="M${num===11?'38':'35'} 60 L${num===11?'35':'32'} 140 L${num===11?'65':'68'} 140 L${num===11?'62':'65'} 60 Q50 ${num===11?'55':'52'} ${num===11?'38':'35'} 60"/>
+                    </g>
+                    <text x="50" y="25" text-anchor="middle" font-size="8" fill="#2a5a8a">${titles[num-11]}</text>`;
+                }
+            } else if (suit === 'S') {
+                // 宝剑 - 每张不同场景
+                if (num === 1) { // 云中剑
+                    scene += `<line x1="50" y1="20" x2="50" y2="140" stroke="#4a4a5a" stroke-width="4"/>
+                    <path d="M50 20 L40 35 M50 20 L60 35" stroke="#4a4a5a" stroke-width="2.5"/>
+                    <circle cx="50" cy="15" r="8" fill="#c9a84c"/>`;
+                } else if (num === 2) { // 闭眼人物
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="55" rx="12" ry="14"/><path d="M36 67 L32 140 L68 140 L64 67 Q50 61 36 67"/></g>
+                    <path d="M43 52 L57 52" stroke="#c9a84c" stroke-width="1.5"/>
+                    <line x1="50" y1="85" x2="25" y2="85" stroke="#4a4a5a" stroke-width="2"/>
+                    <line x1="50" y1="85" x2="75" y2="85" stroke="#4a4a5a" stroke-width="2"/>`;
+                } else if (num === 3) { // 心碎
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="70" rx="12" ry="14"/><path d="M36 82 L30 140 L70 140 L64 82 Q50 76 36 82"/></g>
+                    <path d="M43 67 L57 67" stroke="#c9a84c" stroke-width="1.5"/>
+                    <path d="M45 75 Q50 80 55 75" fill="none" stroke="#c9a84c" stroke-width="1"/>
+                    <line x1="50" y1="50" x2="50" y2="140" stroke="#4a4a5a" stroke-width="2.5"/>`;
+                } else if (num === 4) { // 休息的人
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="100" rx="15" ry="18"/><path d="M33 115 L28 145 L72 145 L67 115 Q50 108 33 115"/></g>
+                    <ellipse cx="50" cy="85" rx="8" ry="10"/>
+                    <line x1="38" y1="75" x2="62" y2="75" stroke="#4a4a5a" stroke-width="2.5"/>`;
+                } else if (num === 5) { // 失败者
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="55" rx="10" ry="12"/><path d="M38 65 L35 130 L65 130 L62 65 Q50 60 38 65"/></g>
+                    <g stroke="#4a4a5a" stroke-width="2"><line x1="35" y1="50" x2="25" y2="40"/><line x1="65" y1="50" x2="75" y2="40"/></g>
+                    <g fill="none" stroke="#c9a84c" stroke-width="1"><path d="M30 100 Q40 90 50 100"/><path d="M50 100 Q60 90 70 100"/></g>`;
+                } else if (num === 6) { // 旅程
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="65" rx="10" ry="12"/><path d="M38 75 L35 140 L65 140 L62 75 Q50 70 38 75"/></g>
+                    <line x1="50" y1="50" x2="50" y2="130" stroke="#4a4a5a" stroke-width="2.5"/>
+                    <path d="M50 50 L50 35 L80 50 L80 65 Z" fill="none" stroke="#4a4a5a" stroke-width="1.5"/>`;
+                } else if (num === 7) { // 偷袭
+                    scene += `<g fill="#1a1525"><ellipse cx="65" cy="55" rx="10" ry="12"/><path d="M53 65 L50 130 L80 130 L77 65 Q65 60 53 65"/></g>
+                    <line x1="30" y1="70" x2="30" y2="130" stroke="#4a4a5a" stroke-width="2.5"/>
+                    <path d="M30 70 L15 55 L18 52 L32 66" stroke="#4a4a5a" stroke-width="2"/>`;
+                } else if (num === 8) { // 被困
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="60" rx="12" ry="14"/><path d="M36 72 L30 140 L70 140 L64 72 Q50 66 36 72"/></g>
+                    <g stroke="#4a4a5a" stroke-width="2.5">
+                        <line x1="35" y1="55" x2="25" y2="45"/><line x1="65" y1="55" x2="75" y2="45"/>
+                        <line x1="50" y1="50" x2="50" y2="40"/>
+                    </g>`;
+                } else if (num === 9) { // 恐惧
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="55" rx="12" ry="14"/><path d="M36 67 L30 140 L70 140 L64 67 Q50 61 36 67"/></g>
+                    <path d="M43 52 L57 52" stroke="#c9a84c" stroke-width="1.5"/>
+                    <path d="M42 60 Q50 55 58 60" fill="none" stroke="#c9a84c" stroke-width="1"/>
+                    <g fill="#c9a84c" opacity="0.3"><circle cx="25" cy="40" r="2"/><circle cx="75" cy="40" r="2"/><circle cx="50" cy="35" r="2"/></g>`;
+                } else if (num === 10) { // 崩溃
+                    scene += `<line x1="35" y1="30" x2="35" y2="140" stroke="#4a4a5a" stroke-width="3"/>
+                    <line x1="50" y1="25" x2="50" y2="140" stroke="#4a4a5a" stroke-width="3"/>
+                    <line x1="65" y1="30" x2="65" y2="140" stroke="#4a4a5a" stroke-width="3"/>
+                    <g fill="#1a1525"><ellipse cx="50" cy="90" rx="15" ry="18"/></g>`;
+                } else { // 人物牌
+                    const titles = ['侍从','骑士','皇后','国王'];
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="50" cy="50" rx="${num===11?10:11}" ry="${num===11?12:13}"/>
+                        <path d="M${num===11?'38':'35'} 60 L${num===11?'35':'32'} 140 L${num===11?'65':'68'} 140 L${num===11?'62':'65'} 60 Q50 ${num===11?'55':'52'} ${num===11?'38':'35'} 60"/>
+                    </g>
+                    <line x1="50" y1="70" x2="50" y2="110" stroke="#4a4a5a" stroke-width="2.5"/>
+                    <text x="50" y="25" text-anchor="middle" font-size="8" fill="#4a4a5a">${titles[num-11]}</text>`;
+                }
+            } else {
+                // 星币 - 每张不同场景
+                if (num === 1) { // 云中星币
+                    scene += `<circle cx="50" cy="50" r="25" fill="none" stroke="#c9a84c" stroke-width="3"/>
+                    <circle cx="50" cy="50" r="18" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                    <circle cx="50" cy="50" r="10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <circle cx="50" cy="50" r="4" fill="#c9a84c"/>
+                    <circle cx="50" cy="20" r="6" fill="#c9a84c"/>`;
+                } else if (num === 2) { // 杂技演员
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="45" rx="8" ry="10"/></g>
+                    <circle cx="30" cy="60" r="12" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                    <circle cx="70" cy="60" r="12" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                    <path d="M30 60 Q50 50 70 60" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+                } else if (num === 3) { // 工匠
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="50" cy="50" rx="10" ry="12"/>
+                        <path d="M38 60 L35 130 L65 130 L62 60 Q50 55 38 60"/>
+                    </g>
+                    <circle cx="50" cy="85" r="18" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                    <path d="M42 85 L50 78 L58 85" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+                } else if (num === 4) { // 守财奴
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="55" rx="12" ry="14"/><path d="M36 67 L32 140 L68 140 L64 67 Q50 61 36 67"/></g>
+                    <circle cx="50" cy="95" r="15" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                    <circle cx="50" cy="95" r="8" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+                } else if (num === 5) { // 乞丐
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="35" cy="65" rx="8" ry="10"/>
+                        <ellipse cx="65" cy="65" rx="8" ry="10"/>
+                    </g>
+                    <path d="M28 80 Q50 70 72 80" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <circle cx="25" cy="110" r="10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <circle cx="75" cy="110" r="10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+                } else if (num === 6) { // 施舍
+                    scene += `<g fill="#1a1525"><ellipse cx="30" cy="60" rx="9" ry="11"/><path d="M20 70 L18 130 L42 130 L40 70 Q30 65 20 70"/></g>
+                    <g fill="#1a1525"><ellipse cx="70" cy="60" rx="9" ry="11"/><path d="M60 70 L58 130 L82 130 L80 70 Q70 65 60 70"/></g>
+                    <circle cx="50" cy="90" r="15" fill="none" stroke="#c9a84c" stroke-width="2"/>`;
+                } else if (num === 7) { // 园丁
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="55" rx="10" ry="12"/><path d="M38 65 L35 140 L65 140 L62 65 Q50 60 38 65"/></g>
+                    <circle cx="50" cy="95" r="18" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                    <circle cx="50" cy="95" r="10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <path d="M30 45 Q40 35 50 45 Q60 35 70 45" fill="none" stroke="#8b6914" stroke-width="1.5"/>`;
+                } else if (num === 8) { // 工匠雕刻
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="50" rx="10" ry="12"/><path d="M38 60 L35 130 L65 130 L62 60 Q50 55 38 60"/></g>
+                    <circle cx="50" cy="90" r="20" fill="none" stroke="#c9a84c" stroke-width="2.5"/>
+                    <circle cx="50" cy="90" r="12" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <circle cx="50" cy="90" r="5" fill="#c9a84c"/>`;
+                } else if (num === 9) { // 贵妇与花园
+                    scene += `<g fill="#1a1525"><ellipse cx="50" cy="50" rx="11" ry="13"/><path d="M36 61 L32 140 L68 140 L64 61 Q50 55 36 61"/></g>
+                    <path d="M28 115 Q50 105 72 115" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <g stroke="#8b6914" stroke-width="1" fill="none" opacity="0.5">
+                        <path d="M20 130 Q30 120 40 130"/>
+                        <path d="M60 130 Q70 120 80 130"/>
+                    </g>`;
+                } else if (num === 10) { // 财富家族
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="30" cy="65" rx="9" ry="11"/>
+                        <ellipse cx="50" cy="60" rx="9" ry="11"/>
+                        <ellipse cx="70" cy="65" rx="9" ry="11"/>
+                    </g>
+                    <path d="M22 80 Q50 70 78 80" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                    <circle cx="20" cy="105" r="10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <circle cx="50" cy="100" r="10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <circle cx="80" cy="105" r="10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>`;
+                } else { // 人物牌
+                    const titles = ['侍从','骑士','皇后','国王'];
+                    scene += `<g fill="#1a1525">
+                        <ellipse cx="50" cy="50" rx="${num===11?10:11}" ry="${num===11?12:13}"/>
+                        <path d="M${num===11?'38':'35'} 60 L${num===11?'35':'32'} 140 L${num===11?'65':'68'} 140 L${num===11?'62':'65'} 60 Q50 ${num===11?'55':'52'} ${num===11?'38':'35'} 60"/>
+                    </g>
+                    <circle cx="50" cy="90" r="15" fill="none" stroke="#c9a84c" stroke-width="2"/>
+                    <circle cx="50" cy="90" r="8" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+                    <text x="50" y="25" text-anchor="middle" font-size="8" fill="#c9a84c">${titles[num-11]}</text>`;
+                }
+            }
+            
+            return `<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg"><defs>${bg}</defs>${scene}</svg>`;
+        }
+
+        const positions = [
+            {name:"过去", nameEn:"Past"},
+            {name:"现在", nameEn:"Present"},
+            {name:"未来", nameEn:"Future"},
+            {name:"建议", nameEn:"Advice"}
+        ];
+
+        let allCards = [];
+        let selectedCards = [];
+        let question = "";
+
+        function init() {
+            allCards = [
+                ...tarotData.major.map(c => ({...c, type:'major'})),
+                ...tarotData.wands.map(c => ({...c, type:'wands'})),
+                ...tarotData.cups.map(c => ({...c, type:'cups'})),
+                ...tarotData.swords.map(c => ({...c, type:'swords'})),
+                ...tarotData.pentacles.map(c => ({...c, type:'pentacles'}))
+            ];
+            allCards.sort(() => Math.random() - 0.5);
+            updateDailyLimitDisplay();
+        }
+
+        function startDraw() {
+            // 检查每日次数限制
+            const limitCheck = checkDailyLimit();
+            
+            if (!limitCheck.allowed) {
+                alert(`⚠ 今日免费占卜次数已用完（${limitCheck.used}/${DAILY_FREE_LIMIT}）
+
+💎 解锁无限次占卜 + 深度解读
+→ 单次解锁 ¥19.9
+→ 月度会员 ¥99
+
+（付费功能即将上线，敬请期待！）`);
+                return;
+            }
+            
+            question = document.getElementById('questionInput').value.trim();
+            
+            if (!question) {
+                alert('请先输入你的问题');
+                return;
+            }
+            
+            incrementDailyCount();
+            updateDailyLimitDisplay();
+            
+            document.getElementById('inputSection').classList.remove('active');
+            document.getElementById('drawSection').classList.add('active');
+            
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+            
+            allCards.forEach((card, index) => {
+                const isReversed = Math.random() > 0.75;
+                card.isReversed = isReversed;
+                const cardEl = document.createElement('div');
+                cardEl.className = 'tarot-card';
+                cardEl.innerHTML = `
+                    <div class="tarot-card-inner">
+                        <div class="card-side card-back">${cardBackSVG}</div>
+                        <div class="card-side card-front">${generateCardSVG(card, isReversed)}</div>
+                    </div>
+                `;
+                cardEl.onclick = () => toggleCard(cardEl, card);
+                container.appendChild(cardEl);
+            });
+        }
+
+        function toggleCard(cardEl, card) {
+            if (cardEl.classList.contains('flipped')) return;
+            const isSelected = cardEl.classList.contains('selected');
+            if (isSelected) {
+                cardEl.classList.remove('selected');
+                selectedCards = selectedCards.filter(c => c !== card);
+            } else {
+                if (selectedCards.length >= 4) { alert('最多选择4张牌'); return; }
+                cardEl.classList.add('selected');
+                selectedCards.push(card);
+            }
+            updateSelectedUI();
+        }
+
+        function updateSelectedUI() {
+            document.getElementById('selectedCount').textContent = selectedCards.length;
+            const selectedBar = document.getElementById('selectedBar');
+            const selectedRow = document.getElementById('selectedRow');
+            const drawBtn = document.getElementById('drawBtn');
+            if (selectedCards.length > 0) {
+                selectedBar.classList.add('active');
+                selectedRow.innerHTML = selectedCards.map(card => `<div class="selected-mini">${generateCardSVG(card)}</div>`).join('');
+            } else { selectedBar.classList.remove('active'); }
+            drawBtn.disabled = selectedCards.length === 0;
+        }
+
+        function getReversedMeaning(meaning) {
+            return meaning.replace(/。/g, '（逆位提醒需特别注意）。').replace(/即将/g, '暂时未能').replace(/成功/g, '需要更多努力');
+        }
+        
+        // 根据问题生成简短解释
+        function generateShortMeaning(card, pos, orientation, question) {
+            const baseMeaning = orientation === '正位' ? card.meaning : getReversedMeaning(card.meaning);
+            
+            // 提取关键词（第一句话）
+            const firstSentence = baseMeaning.split('.')[0] + '.';
+            
+            // 根据位置给出针对性解释
+            const positionHints = {
+                '过去': '这张牌显示在过去，',
+                '现在': '这张牌提示目前，',
+                '未来': '这张牌预示，',
+                '建议': '建议你现在'
+            };
+            
+            const hint = positionHints[pos.name] || '这张牌显示，';
+            
+            return `${hint}${firstSentence}对于"${question}"这个问题，${card.name}出现在${pos.name}位置，暗示需要关注这方面的影响。`;
+        }
+        
+        // ==================== AI 解读功能 ====================
+        let aiReadingText = '';
+        
+        async function callDeepSeekAI(prompt) {
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: MODEL,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `你是一位专业的塔罗牌解读师。
+
+【重要】用户已经看到每张牌的通用牌义，你不需要重复解释！
+
+【你要做的】
+1. 针对用户的问题，解读每张牌的具体含义
+2. 不要说"女祭司代表直觉"这种通用解释
+3. 要说"女祭司出现在过去位置，说明你在这段关系中..."
+
+【输出结构】
+简短开场 → 逐张牌针对问题解读 → 综合总结
+
+【示例】
+针对你的问题，牌面显示了以下信息：
+
+【过去·女祭司（正位）】
+你在这段关系开始时就很敏感，察觉到了某些不对劲的地方，但选择了保持沉默...
+
+【现在·塔（正位）】
+最近的冲突让你不得不面对一直逃避的问题。虽然这次争吵很痛苦，但它打破了你们之间的虚假和平...
+
+【未来·太阳（正位）】
+如果你们能坦诚沟通，关系有机会走向明朗。太阳牌预示着真诚对话后会有新的理解...
+
+【建议·倒吊人（正位）】
+现在不要急着做决定。给自己一到两周的时间，从不同角度思考这段关系...
+
+【综合总结】
+综合四张牌来看，这段关系的核心问题是沟通模式。你习惯性地等待和沉默，而对方可能并没有意识到你的真实需求。这次的冲突虽然痛苦，但也是一个契机。建议你先调整自己的心态，不要急于下结论，等情绪平复后找个合适的时机，平静地表达你的真实感受。
+
+【注意】
+- 不要重复通用牌义
+- 直接说对问题的具体启示
+- 700-1000 字`
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1500,
+                    stream: true
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.text();
+                if (response.status === 429) {
+                    throw new Error('服务器繁忙，请稍后重试');
+                } else if (response.status === 401) {
+                    throw new Error('API Key 无效，请检查设置');
+                } else {
+                    throw new Error(`请求失败：${response.status}`);
+                }
+            }
+            
+            return response.body;
+        }
+        
+        async function readStream(stream, onChunk, onComplete, onError) {
+            const reader = stream.getReader();
+            const decoder = new TextDecoder();
+            let fullText = '';
+            
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+                            
+                            try {
+                                const json = JSON.parse(data);
+                                const content = json.choices[0]?.delta?.content || '';
+                                fullText += content;
+                                onChunk(content);
+                            } catch (e) {
+                                // Ignore parse errors
+                            }
+                        }
+                    }
+                }
+                onComplete(fullText);
+            } catch (e) {
+                onError(e);
+            }
+        }
+        
+        async function showReadingWithAI() {
+            document.getElementById('drawSection').classList.remove('active');
+            const readingSection = document.getElementById('readingSection');
+            const aiReadingSection = document.getElementById('aiReadingSection');
+            
+            // 先显示传统解读区域（在上）
+            readingSection.classList.add('active');
+            
+            document.getElementById('readingQuestion').textContent = question;
+            document.getElementById('aiReadingQuestion').textContent = question;
+            
+            // 翻牌动画
+            const allCardEls = document.querySelectorAll('.tarot-card.selected');
+            allCardEls.forEach((cardEl, idx) => {
+                setTimeout(() => {
+                    const card = selectedCards[idx];
+                    flipCard(cardEl, card.isReversed);
+                }, idx * 300);
+            });
+            
+            // 生成传统解读（每张牌针对问题的简短解释）- 放在上面
+            let html = '';
+            selectedCards.forEach((card, index) => {
+                const pos = positions[index] || positions[positions.length - 1];
+                const orientation = card.isReversed ? '逆位' : '正位';
+                
+                // 根据问题生成简短解释
+                const shortMeaning = generateShortMeaning(card, pos, orientation, question);
+                
+                html += `<div class="reading-card">
+                    <div class="reading-card-header">
+                        <span class="reading-position">${pos.name}</span>
+                        <span class="position-en">[${pos.nameEn}]</span>
+                        <span class="reading-name">[${card.name}]</span>
+                        <span class="reading-orientation">[${orientation}]</span>
+                    </div>
+                    <div class="reading-content">👉 ${shortMeaning}</div>
+                </div>`;
+            });
+            document.getElementById('readingContent').innerHTML = html;
+            
+            // AI 解读（综合总结）- 放在下面
+            const aiContentDiv = document.getElementById('aiReadingContent');
+            const aiRetryBtn = document.getElementById('aiRetryBtn');
+            
+            aiContentDiv.classList.add('streaming');
+            aiReadingText = '';
+            aiContentDiv.innerHTML = '<div class="ai-loading"><div class="ai-loading-dots"><span></span><span></span><span></span></div><span class="ai-loading-text">正在分析牌面...</span></div>';
+            aiRetryBtn.classList.remove('visible');
+            
+            // 构建提示词 - 综合总结，格式优化
+            const aiPrompt = `问题：${question}
+
+牌阵：${selectedCards.length === 1 ? '单张牌' : selectedCards.length === 3 ? '圣三角' : '四牌阵'}
+${selectedCards.map((card, i) => {
+    const pos = positions[i] || positions[positions.length - 1];
+    const orientation = card.isReversed ? '逆位' : '正位';
+    return `• ${pos.name}位置：${card.name}（${orientation}）`;
+}).join('\n')}
+
+【重要】用户已经看到每张牌的通用牌义，你不需要重复！
+【重要】不要逐张解释每张牌！只需要综合总结！
+
+【输出格式要求】
+1. 用 👉 开头每个段落
+2. 段落之间用空行分隔
+3. 不要用**等 markdown 符号
+4. 语气专业但有温度
+5. 600-800 字
+
+【示例格式】
+👉 从整体牌面来看，这段关系目前处于一个关键的转折点...
+
+👉 你在这段关系中的模式是...（结合问题给出分析）
+
+👉 对方的状态和想法可能是...（根据牌面推断）
+
+👉 建议你现在采取的行动是...（具体可行的建议）
+
+请根据问题给出综合性的解读和建议。`;
+            
+            try {
+                const stream = await callDeepSeekAI(aiPrompt);
+                
+                aiContentDiv.textContent = '';
+                
+                await readStream(
+                    stream,
+                    (chunk) => {
+                        aiReadingText += chunk;
+                        // 渲染时将换行转换为<br>，保持段落间隔
+                        aiContentDiv.innerHTML = aiReadingText.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+                    },
+                    () => {
+                        aiContentDiv.classList.remove('streaming');
+                        aiRetryBtn.classList.add('visible');
+                        // 显示 AI 解读区域（在传统解读下方）
+                        aiReadingSection.classList.add('active');
+                        // 滚动到 AI 解读区域
+                        setTimeout(() => {
+                            aiReadingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 500);
+                    },
+                    (error) => {
+                        throw error;
+                    }
+                );
+            } catch (error) {
+                aiContentDiv.classList.remove('streaming');
+                aiContentDiv.innerHTML = `<div style="color: #e57373; text-align: center; padding: 20px;">
+                    <p style="margin-bottom: 10px;">⚠ ${error.message}</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">请检查网络连接或 API Key 设置</p>
+                </div>`;
+                aiRetryBtn.classList.add('visible');
+            }
+        }
+
+        function restart() {
+            selectedCards = [];
+            document.getElementById('readingSection').classList.remove('active');
+            document.getElementById('aiReadingSection').classList.remove('active');
+            document.getElementById('drawSection').classList.remove('active');
+            document.getElementById('inputSection').classList.add('active');
+            document.getElementById('questionInput').value = '';
+            document.getElementById('selectedCount').textContent = '0';
+            document.getElementById('selectedBar').classList.remove('active');
+            init();
+        }
+
+        // 等待页面加载完成后初始化和绑定事件
+        window.onload = function() {
+            console.log('✅ 页面加载完成，开始初始化...');
+            
+            init();
+            updateDailyLimitDisplay();
+            
+            // 绑定事件
+            const startBtn = document.getElementById('startBtn');
+            if (startBtn) {
+                startBtn.onclick = startDraw;
+                console.log('✅ startBtn 绑定成功');
+            } else {
+                console.error('❌ startBtn 元素不存在！');
+            }
+            
+            const drawBtn = document.getElementById('drawBtn');
+            if (drawBtn) {
+                drawBtn.onclick = showReadingWithAI;
+                console.log('✅ drawBtn 绑定成功');
+            } else {
+                console.error('❌ drawBtn 元素不存在！');
+            }
+            
+            const restartBtn = document.getElementById('restartBtn');
+            if (restartBtn) {
+                restartBtn.onclick = restart;
+                console.log('✅ restartBtn 绑定成功');
+            }
+            
+            const aiRestartBtn = document.getElementById('aiRestartBtn');
+            if (aiRestartBtn) {
+                aiRestartBtn.onclick = restart;
+                console.log('✅ aiRestartBtn 绑定成功');
+            }
+            
+            const aiRetryBtn = document.getElementById('aiRetryBtn');
+            if (aiRetryBtn) {
+                aiRetryBtn.onclick = function() {
+                    showReadingWithAI();
+                };
+                console.log('✅ aiRetryBtn 绑定成功');
+            }
+            
+            console.log('✅ 所有初始化完成！当前牌数：', allCards ? allCards.length : 0);
+        };
+    </script>
+</body>
+</html>

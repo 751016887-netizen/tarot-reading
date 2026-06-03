@@ -487,6 +487,17 @@
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        <!-- 百度统计 -->
+        <script>
+            var _hmt = _hmt || [];
+            (function() {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?YOUR_BAIDU_TONGJI_ID";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
     </style>
 </head>
 <body>
@@ -551,10 +562,25 @@
         const DEEPSEEK_API_KEY = 'sk-896cd9c0eb034de39dcbebab98b5c816';
         const API_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
         const MODEL = 'deepseek-chat';
-        const DAILY_FREE_LIMIT = 999; // 测试期间临时增加次数
+        
+        // 管理员配置
+        const ADMIN_SECRET = 'tarot520admin'; // 管理员密钥
+        const isAdmin = checkAdmin(); // 检查是否管理员
+        
+        // 每日限制（管理员不受限）
+        const DAILY_FREE_LIMIT = isAdmin ? 999999 : 3; // 管理员 999999 次，普通用户 3 次
+        
+        // 检查是否管理员
+        function checkAdmin() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('admin') === ADMIN_SECRET;
+        }
         
         // 检查每日使用次数
         function checkDailyLimit() {
+            if (isAdmin) {
+                return { allowed: true, remaining: 999999 };
+            }
             const today = new Date().toDateString();
             const lastVisit = localStorage.getItem('lastVisitDate');
             let count = parseInt(localStorage.getItem('dailyCount') || '0');
@@ -570,6 +596,11 @@
             }
             
             return { allowed: true, remaining: DAILY_FREE_LIMIT - count, used: count };
+        }
+        
+        // 管理员状态显示
+        if (isAdmin) {
+            console.log('👑 管理员模式：无限次数');
         }
         
         // 增加使用次数

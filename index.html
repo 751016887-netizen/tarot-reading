@@ -578,18 +578,17 @@
         const API_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
         const MODEL = 'deepseek-chat';
         
+        // 检查是否管理员（先定义函数）
+        function checkAdmin() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('admin') === 'tarot520admin';
+        }
+        
         // 管理员配置
-        const ADMIN_SECRET = 'tarot520admin'; // 管理员密钥
         const isAdmin = checkAdmin(); // 检查是否管理员
         
         // 每日限制（管理员不受限）
         const DAILY_FREE_LIMIT = isAdmin ? 999999 : 3; // 管理员 999999 次，普通用户 3 次
-        
-        // 检查是否管理员
-        function checkAdmin() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('admin') === ADMIN_SECRET;
-        }
         
         // 检查每日使用次数
         function checkDailyLimit() {

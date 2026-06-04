@@ -1438,24 +1438,63 @@
             return meaning.replace(/。/g, '（逆位提醒需特别注意）。').replace(/即将/g, '暂时未能').replace(/成功/g, '需要更多努力');
         }
         
-        // 根据问题生成简短解释
-        function generateShortMeaning(card, pos, orientation, question) {
-            const baseMeaning = orientation === '正位' ? card.meaning : getReversedMeaning(card.meaning);
+        // 根据问题生成简短解释（调用 AI 针对问题解读）
+        async function generateShortMeaning(card, pos, orientation, question) {
+            const aiPrompt = `问题：${question}
+塔罗牌：${card.name}（${orientation}）
+位置：${pos.name}位置
+
+牌义：${orientation === '正位' ? card.meaning : card.meaning + '（逆位）'}
+
+【任务】
+针对用户的问题，结合这张牌的含义和位置，给出 1-2 句话的简短解读。
+
+【要求】
+- 用"👉 "开头
+- 只写 1-2 句话，50-80 字
+- 必须结合问题给出具体解读
+- 不要解释牌的通用含义
+- 语气专业但有温度
+
+【示例】
+问题："我们的关系发展如何？"
+输出：👉 过去你们的关系曾经很和谐，但最近可能因为沟通不足产生了一些误解。建议回顾过去的美好时光，找到问题的根源。
+
+请直接给出解读，不要其他内容。`;
             
-            // 提取关键词（第一句话）
-            const firstSentence = baseMeaning.split('.')[0] + '.';
-            
-            // 根据位置给出针对性解释
-            const positionHints = {
-                '过去': '这张牌显示在过去，',
-                '现在': '这张牌提示目前，',
-                '未来': '这张牌预示，',
-                '建议': '建议你现在'
-            };
-            
-            const hint = positionHints[pos.name] || '这张牌显示，';
-            
-            return `${hint}${firstSentence}对于"${question}"这个问题，${card.name}出现在${pos.name}位置，暗示需要关注这方面的影响。`;
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: MODEL,
+                        messages: [{ role: 'user', content: aiPrompt }],
+                        max_tokens: 100,
+                        temperature: 0.7,
+                        stream: false
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API 请求失败：${response.status}`);
+                }
+                
+                const data = await response.json();
+                let content = data.choices[0].message.content.trim();
+                
+                // 确保有 👉 开头
+                if (!content.startsWith('👉')) {
+                    content = '👉 ' + content;
+                }
+                return content;
+            } catch (error) {
+                console.error('AI 解读失败:', error);
+                // AI 失败时返回通用解读
+                return `👉 ${card.name}出现在${pos.name}位置（${orientation}），${card.meaning.split('.')[0]}。这张牌提示你需要关注相关方面。`;
+            }
         }
         
         // ==================== AI 解读功能 ====================
@@ -1583,19 +1622,23 @@
             const allCardEls = document.querySelectorAll('.tarot-card.selected');
             allCardEls.forEach((cardEl, idx) => {
                 setTimeout(() => {
-                    const card = selectedCards[idx];
-                    flipCard(cardEl, card.isReversed);
+                    cardEl.classList.add('flipped');
+                    const cardInner = cardEl.querySelector('.tarot-card-inner');
+                    if (cardInner) {
+                        cardInner.style.transform = 'rotateY(180deg)';
+                    }
                 }, idx * 300);
             });
             
-            // 生成传统解读（每张牌针对问题的简短解释）- 放在上面
+            // 生成传统解读（每张牌 AI 针对问题的简短解释）- 放在上面
             let html = '';
-            selectedCards.forEach((card, index) => {
+            for (let index = 0; index < selectedCards.length; index++) {
+                const card = selectedCards[index];
                 const pos = positions[index] || positions[positions.length - 1];
                 const orientation = card.isReversed ? '逆位' : '正位';
                 
-                // 根据问题生成简短解释
-                const shortMeaning = generateShortMeaning(card, pos, orientation, question);
+                // 调用 AI 生成简短解释
+                const shortMeaning = await generateShortMeaning(card, pos, orientation, question);
                 
                 html += `<div class="reading-card">
                     <div class="reading-card-header">
@@ -1604,9 +1647,9 @@
                         <span class="reading-name">[${card.name}]</span>
                         <span class="reading-orientation">[${orientation}]</span>
                     </div>
-                    <div class="reading-content">👉 ${shortMeaning}</div>
+                    <div class="reading-content">${shortMeaning}</div>
                 </div>`;
-            });
+            }
             document.getElementById('readingContent').innerHTML = html;
             
             // AI 解读（综合总结）- 放在下面

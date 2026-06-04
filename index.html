@@ -1749,16 +1749,6 @@ ${selectedCards.map((card, i) => {
                 console.error('AI 总结失败:', error);
             }
         }
-                );
-            } catch (error) {
-                aiContentDiv.classList.remove('streaming');
-                aiContentDiv.innerHTML = `<div style="color: #e57373; text-align: center; padding: 20px;">
-                    <p style="margin-bottom: 10px;">⚠ ${error.message}</p>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">请检查网络连接或 API Key 设置</p>
-                </div>`;
-                aiRetryBtn.classList.add('visible');
-            }
-        }
 
         function restart() {
             selectedCards = [];

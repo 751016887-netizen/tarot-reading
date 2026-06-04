@@ -68,6 +68,7 @@
             text-shadow: 0 0 30px rgba(212, 184, 150, 0.25);
             cursor: pointer;
             transition: opacity 0.3s;
+            user-select: none;
         }
 
         .logo:hover {
@@ -76,7 +77,7 @@
 
         .tagline {
             font-size: 0.6rem;
-            color: var(--text-muted);
+            color: #c4b898;
             letter-spacing: 0.3em;
             margin-top: 2px;
         }
@@ -163,7 +164,7 @@
             color: var(--text-secondary);
         }
 
-        .draw-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+        .draw-hint { font-size: 0.75rem; color: #e5d8c8; margin-top: 4px; }
 
         .card-grid {
             flex: 1;
@@ -267,11 +268,11 @@
             text-align: center;
             margin-bottom: 12px;
             font-family: 'Cormorant Garamond', serif;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+            font-size: 0.85rem;
+            color: #e5d8c8;
         }
 
-        .selected-info span { color: var(--gold-primary); }
+        .selected-info span { color: var(--gold-primary); font-weight: 600; }
 
         .selected-cards-row {
             display: flex;
@@ -519,7 +520,7 @@
     
     <div class="container">
         <header class="header">
-            <h1 class="logo" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">零点塔罗</h1>
+            <h1 class="logo" onclick="goToInputPage()">零点塔罗</h1>
             <p class="tagline">MYSTERY · GENTLE · DIRECT</p>
         </header>
 
@@ -1731,17 +1732,24 @@ ${selectedCards.map((card, i) => {
                     },
                     () => {
                         aiContentDiv.classList.remove('streaming');
-                        aiRetryBtn.classList.add('visible');
-                        // 显示 AI 解读区域（在传统解读下方）
+                        // AI 总结加载完成后，不自动显示，等用户自己向下滚动看到
+                        aiRetryBtn.classList.remove('visible'); // 隐藏重试按钮
                         aiReadingSection.classList.add('active');
-                        // 滚动到 AI 解读区域
-                        setTimeout(() => {
-                            aiReadingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }, 500);
+                        // 不自动滚动，让用户自然阅读
                     },
                     (error) => {
-                        throw error;
+                        aiContentDiv.classList.remove('streaming');
+                        aiContentDiv.innerHTML = `<div style="color: #e57373; text-align: center; padding: 20px;">
+                            <p style="margin-bottom: 10px;">⚠ AI 总结暂时无法加载</p>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">上方牌意解读已完成，请查看</p>
+                        </div>`;
+                        aiRetryBtn.classList.remove('visible'); // 隐藏重试按钮
                     }
+                );
+            } catch (error) {
+                console.error('AI 总结失败:', error);
+            }
+        }
                 );
             } catch (error) {
                 aiContentDiv.classList.remove('streaming');
@@ -1762,7 +1770,26 @@ ${selectedCards.map((card, i) => {
             document.getElementById('questionInput').value = '';
             document.getElementById('selectedCount').textContent = '0';
             document.getElementById('selectedBar').classList.remove('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // 清除历史记录，让浏览器返回时回到主页面
+            history.replaceState({ page: 'input' }, null, window.location.pathname);
             init();
+        }
+        
+        function goToInputPage() {
+            // 回到输入问题的主页面
+            if (document.getElementById('drawSection').classList.contains('active') ||
+                document.getElementById('readingSection').classList.contains('active')) {
+                document.getElementById('drawSection').classList.remove('active');
+                document.getElementById('readingSection').classList.remove('active');
+                document.getElementById('aiReadingSection').classList.remove('active');
+                document.getElementById('inputSection').classList.add('active');
+                selectedCards = [];
+                document.getElementById('selectedCount').textContent = '0';
+                document.getElementById('selectedBar').classList.remove('active');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            history.replaceState({ page: 'input' }, null, window.location.pathname);
         }
 
         // 等待页面加载完成后初始化和绑定事件
@@ -1771,6 +1798,16 @@ ${selectedCards.map((card, i) => {
             
             init();
             updateDailyLimitDisplay();
+            
+            // 设置初始历史状态
+            history.replaceState({ page: 'input' }, null, window.location.pathname);
+            
+            // 处理浏览器返回按钮
+            window.onpopstate = function(event) {
+                if (event.state && event.state.page === 'input') {
+                    goToInputPage();
+                }
+            };
             
             // 绑定事件
             const startBtn = document.getElementById('startBtn');
@@ -1806,6 +1843,11 @@ ${selectedCards.map((card, i) => {
                 aiRetryBtn.onclick = function() {
                     showReadingWithAI();
                 };
+                console.log('✅ aiRetryBtn 绑定成功');
+            }
+            
+            console.log('✅ 所有事件绑定完成');
+        };
                 console.log('✅ aiRetryBtn 绑定成功');
             }
             

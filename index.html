@@ -24,6 +24,7 @@
             min-height: 100vh;
             overflow-x: hidden;
             line-height: 1.7;
+            padding-top: 140px;
         }
 
         .bg-layer {
@@ -48,30 +49,36 @@
         }
 
         .header {
-            padding: 35px 0 20px;
+            padding: 20px 0 15px;
             text-align: center;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(to bottom, var(--bg-deep) 85%, transparent);
+            background: linear-gradient(to bottom, var(--bg-deep) 90%, transparent);
             z-index: 1000;
         }
 
         .logo {
             font-family: 'Cinzel', serif;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 500;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.15em;
             color: var(--gold-primary);
             text-shadow: 0 0 30px rgba(212, 184, 150, 0.25);
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
         }
 
         .tagline {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: var(--text-muted);
-            letter-spacing: 0.4em;
-            margin-top: 4px;
+            letter-spacing: 0.3em;
+            margin-top: 2px;
         }
 
         .input-section { padding: 25px 0; display: none; }
@@ -186,6 +193,13 @@
         }
         @media (min-width: 900px) {
             .cards-container { grid-template-columns: repeat(5, 1fr); max-width: 900px; }
+        }
+        
+        @media (max-width: 480px) {
+            body { padding-top: 120px; }
+            .header { padding: 15px 0 10px; }
+            .logo { font-size: 1.4rem; }
+            .tagline { font-size: 0.55rem; }
         }
 
         .tarot-card {
@@ -505,7 +519,7 @@
     
     <div class="container">
         <header class="header">
-            <h1 class="logo">零点塔罗</h1>
+            <h1 class="logo" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">零点塔罗</h1>
             <p class="tagline">MYSTERY · GENTLE · DIRECT</p>
         </header>
 
@@ -1630,15 +1644,26 @@
                 }, idx * 300);
             });
             
-            // 生成传统解读（每张牌 AI 针对问题的简短解释）- 放在上面
+            // 同时调用所有牌的 AI 解读（并行请求，加快速度）
+            const aiPromises = selectedCards.map((card, index) => {
+                const pos = positions[index] || positions[positions.length - 1];
+                const orientation = card.isReversed ? '逆位' : '正位';
+                return generateShortMeaning(card, pos, orientation, question);
+            });
+            
+            // 显示加载状态
+            document.getElementById('readingContent').innerHTML = '<div class="loading-container" style="text-align:center;padding:60px 20px;"><div class="ai-loading-dots"><span></span><span></span><span></span></div><span class="ai-loading-text" style="color:#d4b896;margin-top:15px;">正在解读牌面...</span></div>';
+            
+            // 等待所有 AI 解读完成
+            const meanings = await Promise.all(aiPromises);
+            
+            // 生成传统解读
             let html = '';
             for (let index = 0; index < selectedCards.length; index++) {
                 const card = selectedCards[index];
                 const pos = positions[index] || positions[positions.length - 1];
                 const orientation = card.isReversed ? '逆位' : '正位';
-                
-                // 调用 AI 生成简短解释
-                const shortMeaning = await generateShortMeaning(card, pos, orientation, question);
+                const shortMeaning = meanings[index];
                 
                 html += `<div class="reading-card">
                     <div class="reading-card-header">

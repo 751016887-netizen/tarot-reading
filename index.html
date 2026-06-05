@@ -1625,13 +1625,14 @@
             const readingSection = document.getElementById('readingSection');
             const aiReadingSection = document.getElementById('aiReadingSection');
             
-            // 先显示传统解读区域（在上）
-            readingSection.classList.add('active');
+            // 显示"正在解读"加载动画（在抽牌页面）
+            const cardsContainer = document.getElementById('cardsContainer');
+            cardsContainer.innerHTML = '<div class="loading-container" style="text-align:center;padding:80px 20px;"><div style="font-size:3rem;margin-bottom:20px;">🔮</div><div style="font-size:1.1rem;color:#d4b896;">正在为你解读牌面...</div><div class="ai-loading-dots" style="margin-top:20px;"><span></span><span></span><span></span></div></div>';
             
             document.getElementById('readingQuestion').textContent = question;
             document.getElementById('aiReadingQuestion').textContent = question;
             
-            // 翻牌动画
+            // 翻牌动画（快速完成）
             const allCardEls = document.querySelectorAll('.tarot-card.selected');
             allCardEls.forEach((cardEl, idx) => {
                 setTimeout(() => {
@@ -1640,52 +1641,17 @@
                     if (cardInner) {
                         cardInner.style.transform = 'rotateY(180deg)';
                     }
-                }, idx * 300);
+                }, idx * 150);
             });
             
-            // 同时调用所有牌的 AI 解读（并行请求，加快速度）
-            const aiPromises = selectedCards.map((card, index) => {
+            // 并行加载：所有牌的 AI 解读 + 综合总结
+            const cardMeaningPromises = selectedCards.map((card, index) => {
                 const pos = positions[index] || positions[positions.length - 1];
                 const orientation = card.isReversed ? '逆位' : '正位';
                 return generateShortMeaning(card, pos, orientation, question);
             });
             
-            // 显示加载状态
-            document.getElementById('readingContent').innerHTML = '<div class="loading-container" style="text-align:center;padding:60px 20px;"><div class="ai-loading-dots"><span></span><span></span><span></span></div><span class="ai-loading-text" style="color:#d4b896;margin-top:15px;">正在解读牌面...</span></div>';
-            
-            // 等待所有 AI 解读完成
-            const meanings = await Promise.all(aiPromises);
-            
-            // 生成传统解读
-            let html = '';
-            for (let index = 0; index < selectedCards.length; index++) {
-                const card = selectedCards[index];
-                const pos = positions[index] || positions[positions.length - 1];
-                const orientation = card.isReversed ? '逆位' : '正位';
-                const shortMeaning = meanings[index];
-                
-                html += `<div class="reading-card">
-                    <div class="reading-card-header">
-                        <span class="reading-position">${pos.name}</span>
-                        <span class="position-en">[${pos.nameEn}]</span>
-                        <span class="reading-name">[${card.name}]</span>
-                        <span class="reading-orientation">[${orientation}]</span>
-                    </div>
-                    <div class="reading-content">${shortMeaning}</div>
-                </div>`;
-            }
-            document.getElementById('readingContent').innerHTML = html;
-            
-            // AI 解读（综合总结）- 放在下面
-            const aiContentDiv = document.getElementById('aiReadingContent');
-            const aiRetryBtn = document.getElementById('aiRetryBtn');
-            
-            aiContentDiv.classList.add('streaming');
-            aiReadingText = '';
-            aiContentDiv.innerHTML = '<div class="ai-loading"><div class="ai-loading-dots"><span></span><span></span><span></span></div><span class="ai-loading-text">正在分析牌面...</span></div>';
-            aiRetryBtn.classList.remove('visible');
-            
-            // 构建提示词 - 综合总结，格式优化
+            // 综合总结的 AI 请求
             const aiPrompt = `问题：${question}
 
 牌阵：三张牌
@@ -1713,41 +1679,78 @@ ${selectedCards.map((card, i) => {
 
 👉 建议你现在采取的行动是...（具体可行的建议）
 
-👉 建议你现在采取的行动是...（具体可行的建议）
-
 请根据问题给出综合性的解读和建议。`;
             
-            try {
-                const stream = await callDeepSeekAI(aiPrompt);
+            // 创建综合总结的 Promise
+            const aiSummaryPromise = (async () => {
+                try {
+                    const stream = await callDeepSeekAI(aiPrompt);
+                    let aiSummaryText = '';
+                    
+                    await readStream(
+                        stream,
+                        (chunk) => {
+                            aiSummaryText += chunk;
+                        },
+                        () => {
+                            return aiSummaryText;
+                        },
+                        (error) => {
+                            console.error('AI 总结失败:', error);
+                            return '⚠ AI 总结暂时无法加载，请查看上方牌意解读。';
+                        }
+                    );
+                    
+                    return aiSummaryText;
+                } catch (error) {
+                    console.error('AI 总结异常:', error);
+                    return '⚠ AI 总结暂时无法加载，请查看上方牌意解读。';
+                }
+            })();
+            
+            // 等待所有内容加载完成
+            const [meanings, aiSummary] = await Promise.all([
+                Promise.all(cardMeaningPromises),
+                aiSummaryPromise
+            ]);
+            
+            // 全部加载完成，显示解牌页面
+            readingSection.classList.add('active');
+            
+            // 生成传统解读（每张牌）
+            let html = '';
+            for (let index = 0; index < selectedCards.length; index++) {
+                const card = selectedCards[index];
+                const pos = positions[index] || positions[positions.length - 1];
+                const orientation = card.isReversed ? '逆位' : '正位';
+                const shortMeaning = meanings[index];
                 
-                aiContentDiv.textContent = '';
-                
-                await readStream(
-                    stream,
-                    (chunk) => {
-                        aiReadingText += chunk;
-                        // 渲染时将换行转换为<br>，保持段落间隔
-                        aiContentDiv.innerHTML = aiReadingText.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
-                    },
-                    () => {
-                        aiContentDiv.classList.remove('streaming');
-                        // AI 总结加载完成后，不自动显示，等用户自己向下滚动看到
-                        aiRetryBtn.classList.remove('visible'); // 隐藏重试按钮
-                        aiReadingSection.classList.add('active');
-                        // 不自动滚动，让用户自然阅读
-                    },
-                    (error) => {
-                        aiContentDiv.classList.remove('streaming');
-                        aiContentDiv.innerHTML = `<div style="color: #e57373; text-align: center; padding: 20px;">
-                            <p style="margin-bottom: 10px;">⚠ AI 总结暂时无法加载</p>
-                            <p style="font-size: 0.85rem; color: var(--text-muted);">上方牌意解读已完成，请查看</p>
-                        </div>`;
-                        aiRetryBtn.classList.remove('visible'); // 隐藏重试按钮
-                    }
-                );
-            } catch (error) {
-                console.error('AI 总结失败:', error);
+                html += `<div class="reading-card">
+                    <div class="reading-card-header">
+                        <span class="reading-position">${pos.name}</span>
+                        <span class="position-en">[${pos.nameEn}]</span>
+                        <span class="reading-name">[${card.name}]</span>
+                        <span class="reading-orientation">[${orientation}]</span>
+                    </div>
+                    <div class="reading-content">${shortMeaning}</div>
+                </div>`;
             }
+            document.getElementById('readingContent').innerHTML = html;
+            
+            // 生成 AI 综合总结
+            const aiContentDiv = document.getElementById('aiReadingContent');
+            const aiRetryBtn = document.getElementById('aiRetryBtn');
+            
+            aiContentDiv.innerHTML = aiSummary === '⚠ AI 总结暂时无法加载，请查看上方牌意解读。' 
+                ? `<div style="color: #e57373; text-align: center; padding: 20px;">
+                    <p style="margin-bottom: 10px;">⚠ AI 总结暂时无法加载</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">上方牌意解读已完成，请查看</p>
+                </div>`
+                : aiSummary.replace(/\n\n/g, '<br><br>');
+            aiReadingSection.classList.add('active');
+            
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function restart() {

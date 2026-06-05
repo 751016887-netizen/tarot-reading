@@ -1621,18 +1621,16 @@
         }
         
         async function showReadingWithAI() {
+            // 确保抽牌页面保持显示
             document.getElementById('drawSection').classList.remove('active');
-            const readingSection = document.getElementById('readingSection');
-            const aiReadingSection = document.getElementById('aiReadingSection');
             
-            // 显示"正在解读"加载动画（在抽牌页面）
+            // 显示加载动画（在抽牌区域）
+            const container = document.getElementById('drawSection');
+            container.classList.add('active');
             const cardsContainer = document.getElementById('cardsContainer');
-            cardsContainer.innerHTML = '<div class="loading-container" style="text-align:center;padding:80px 20px;"><div style="font-size:3rem;margin-bottom:20px;">🔮</div><div style="font-size:1.1rem;color:#d4b896;">正在为你解读牌面...</div><div class="ai-loading-dots" style="margin-top:20px;"><span></span><span></span><span></span></div></div>';
+            cardsContainer.innerHTML = '<div class="loading-container" style="text-align:center;padding:100px 20px;"><div style="font-size:3rem;margin-bottom:20px;">🔮</div><div style="font-size:1.2rem;color:#f5e6d8;">正在为你解读牌面...</div><div class="ai-loading-dots" style="margin-top:25px;"><span></span><span></span><span></span></div></div>';
             
-            document.getElementById('readingQuestion').textContent = question;
-            document.getElementById('aiReadingQuestion').textContent = question;
-            
-            // 翻牌动画（快速完成）
+            // 翻牌动画（快速完成，保持选中状态）
             const allCardEls = document.querySelectorAll('.tarot-card.selected');
             allCardEls.forEach((cardEl, idx) => {
                 setTimeout(() => {
@@ -1643,6 +1641,9 @@
                     }
                 }, idx * 150);
             });
+            
+            const readingSection = document.getElementById('readingSection');
+            const aiReadingSection = document.getElementById('aiReadingSection');
             
             // 并行加载：所有牌的 AI 解读 + 综合总结
             const cardMeaningPromises = selectedCards.map((card, index) => {
@@ -1663,23 +1664,30 @@ ${selectedCards.map((card, i) => {
 【重要】用户已经看到每张牌的解读，你只需要做综合总结！
 【重要】不要逐张解释每张牌！只需要整体分析！
 
+【人设和语气】
+- 你的名字是"冻儜楽"
+- 开场白："你好呀，我是冻儜楽，很高兴为你解牌。"
+- 全程用第一人称"我"（不是"你"）
+- 像是真实塔罗师在对话，有温度但专业
+- 不要机械式的分析，要像在讲故事
+
 【输出格式要求】
-1. 用 👉 开头每个段落
-2. 段落之间用空行分隔
-3. 不要用**等 markdown 符号
-4. 语气专业但有温度
+1. 开头固定：你好呀，我是冻儜楽，很高兴为你解牌。
+2. 用 👉 开头每个段落
+3. 段落之间用空行分隔
+4. 不要用**等 markdown 符号
 5. 600-800 字
 
-【示例格式】
-👉 从整体牌面来看，这段关系目前处于一个关键的转折点...
+【示例】
+你好呀，我是冻儜楽，很高兴为你解牌。
 
-👉 你在这段关系中的模式是...（结合问题给出分析）
+👉 我从这三张牌面来看，你们的关系目前正处在一个需要耐心经营的阶段。我能感受到你内心的不安和期待...
 
-👉 对方的状态和想法可能是...（根据牌面推断）
+👉 从我多年的解牌经验来看，对方现在的状态可能是...
 
-👉 建议你现在采取的行动是...（具体可行的建议）
+👉 如果是我遇到这样的情况，我会建议你现在采取...
 
-请根据问题给出综合性的解读和建议。`;
+请直接开始输出，按照上面的格式和语气。`;
             
             // 创建综合总结的 Promise
             const aiSummaryPromise = (async () => {

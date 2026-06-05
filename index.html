@@ -416,27 +416,24 @@
             }
         }
         
-        .loading-text-waves {
-            display: inline-block;
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(212,184,150,0.4)); }
+            50% { filter: drop-shadow(0 0 50px rgba(212,184,150,0.8)); }
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); opacity: 0.5; }
+            50% { transform: translateY(-4px); opacity: 1; }
         }
         
         .loading-text-waves span {
             display: inline-block;
-            animation: wave 1.5s infinite ease-in-out;
+            animation: wave 1.2s infinite ease-in-out;
         }
         
         .loading-text-waves span:nth-child(1) { animation-delay: 0s; }
         .loading-text-waves span:nth-child(2) { animation-delay: 0.1s; }
         .loading-text-waves span:nth-child(3) { animation-delay: 0.2s; }
-        .loading-text-waves span:nth-child(4) { animation-delay: 0.3s; }
-        .loading-text-waves span:nth-child(5) { animation-delay: 0.4s; }
-        .loading-text-waves span:nth-child(6) { animation-delay: 0.5s; }
-        .loading-text-waves span:nth-child(7) { animation-delay: 0.6s; }
-        
-        @keyframes wave {
-            0%, 100% { transform: translateY(0); opacity: 0.6; }
-            50% { transform: translateY(-3px); opacity: 1; }
-        }
         
         .ai-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
         .ai-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
@@ -1670,21 +1667,12 @@
             readingSection.classList.remove('active');
             aiReadingSection.classList.remove('active');
             
-            // 显示精美加载动画（在抽牌区域，完美居中）
+            // 显示简洁加载动画（完美居中）
             const cardsContainer = document.getElementById('cardsContainer');
             cardsContainer.innerHTML = `
-                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 20px;min-height:500px;">
-                    <div style="font-size:4rem;margin-bottom:10px;filter:drop-shadow(0 0 30px rgba(212,184,150,0.5));">🔮</div>
-                    <div style="font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.3em;color:#8b7355;margin-bottom:25px;text-transform:uppercase;">Mystic Reading</div>
-                    <div class="loading-text-waves" style="font-size:1.3rem;color:#f5e6d8;margin-bottom:25px;font-weight:500;">
-                        <span>正</span><span>在</span><span>为</span><span>你</span><span>解</span><span>读</span><span>牌</span><span>面</span><span>·</span><span>·</span><span>·</span>
-                    </div>
-                    <div class="ai-loading-dots" style="display:flex;justify-content:center;margin-bottom:30px;"></div>
-                    <div style="max-width:400px;padding:20px;border-top:1px solid rgba(212,184,150,0.2);border-bottom:1px solid rgba(212,184,150,0.2);">
-                        <div style="font-size:0.75rem;color:#8b7355;letter-spacing:0.1em;margin-bottom:8px;">YOUR QUESTION</div>
-                        <div style="font-size:0.95rem;color:#d4b896;line-height:1.6;">${question}</div>
-                    </div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:0.7rem;color:#6b5c4f;margin-top:25px;letter-spacing:0.2em;">❖ 冻儜楽 · 塔罗解读 ❖</div>
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:100vh;">
+                    <div style="font-size:5rem;margin-bottom:20px;filter:drop-shadow(0 0 40px rgba(212,184,150,0.6));animation: glow 2s ease-in-out infinite;">🔮</div>
+                    <div style="font-size:1.5rem;color:#f5e6d8;margin-top:30px;letter-spacing:0.15em;">正在为你解读<span class="loading-text-waves"><span>·</span><span>·</span><span>·</span></span></div>
                 </div>
             `;
             

@@ -536,13 +536,13 @@
         <section class="draw-section" id="drawSection">
             <div class="draw-header">
                 <p class="draw-title">上下滑动选择 1-4 张牌</p>
-                <p class="draw-hint">点击牌面选中</p>
+                <p class="draw-hint">点击牌面选中 1-3 张牌</p>
             </div>
             <div class="card-grid" id="cardGrid">
                 <div class="cards-container" id="cardsContainer"></div>
             </div>
             <div class="selected-bar" id="selectedBar">
-                <p class="selected-info">已选择 <span id="selectedCount">0</span>/4 张</p>
+                <p class="selected-info">已选择 <span id="selectedCount">0</span>/3 张</p>
                 <div class="selected-cards-row" id="selectedRow"></div>
                 <button class="btn-draw" id="drawBtn" disabled>查看解读</button>
             </div>
@@ -1353,10 +1353,9 @@
         }
 
         const positions = [
-            {name:"过去", nameEn:"Past"},
-            {name:"现在", nameEn:"Present"},
-            {name:"未来", nameEn:"Future"},
-            {name:"建议", nameEn:"Advice"}
+            {name:"第一张", nameEn:"Card 1"},
+            {name:"第二张", nameEn:"Card 2"},
+            {name:"第三张", nameEn:"Card 3"}
         ];
 
         let allCards = [];
@@ -1429,7 +1428,7 @@
                 cardEl.classList.remove('selected');
                 selectedCards = selectedCards.filter(c => c !== card);
             } else {
-                if (selectedCards.length >= 4) { alert('最多选择4张牌'); return; }
+                if (selectedCards.length >= 3) { alert('最多选择 3 张牌'); return; }
                 cardEl.classList.add('selected');
                 selectedCards.push(card);
             }
@@ -1456,23 +1455,24 @@
         async function generateShortMeaning(card, pos, orientation, question) {
             const aiPrompt = `问题：${question}
 塔罗牌：${card.name}（${orientation}）
-位置：${pos.name}位置
+牌序：${pos.name}
 
 牌义：${orientation === '正位' ? card.meaning : card.meaning + '（逆位）'}
 
 【任务】
-针对用户的问题，结合这张牌的含义和位置，给出 1-2 句话的简短解读。
+针对用户的问题，结合这张牌的含义，给出简短解读。
 
 【要求】
 - 用"👉 "开头
-- 只写 1-2 句话，50-80 字
+- 1-2 句话，简洁明了
 - 必须结合问题给出具体解读
 - 不要解释牌的通用含义
 - 语气专业但有温度
+- 不要提到"第一张/第二张/第三张"，直接解读
 
 【示例】
 问题："我们的关系发展如何？"
-输出：👉 过去你们的关系曾经很和谐，但最近可能因为沟通不足产生了一些误解。建议回顾过去的美好时光，找到问题的根源。
+输出：👉 你们的关系目前处于一个需要耐心经营的阶段，双方都需要更多真诚的沟通。建议放下防备，坦诚交流彼此的真实感受。
 
 请直接给出解读，不要其他内容。`;
             
@@ -1689,15 +1689,14 @@
             // 构建提示词 - 综合总结，格式优化
             const aiPrompt = `问题：${question}
 
-牌阵：${selectedCards.length === 1 ? '单张牌' : selectedCards.length === 3 ? '圣三角' : '四牌阵'}
+牌阵：三张牌
 ${selectedCards.map((card, i) => {
-    const pos = positions[i] || positions[positions.length - 1];
     const orientation = card.isReversed ? '逆位' : '正位';
-    return `• ${pos.name}位置：${card.name}（${orientation}）`;
+    return `• 第${i+1}张牌：${card.name}（${orientation}）`;
 }).join('\n')}
 
-【重要】用户已经看到每张牌的通用牌义，你不需要重复！
-【重要】不要逐张解释每张牌！只需要综合总结！
+【重要】用户已经看到每张牌的解读，你只需要做综合总结！
+【重要】不要逐张解释每张牌！只需要整体分析！
 
 【输出格式要求】
 1. 用 👉 开头每个段落
@@ -1712,6 +1711,8 @@ ${selectedCards.map((card, i) => {
 👉 你在这段关系中的模式是...（结合问题给出分析）
 
 👉 对方的状态和想法可能是...（根据牌面推断）
+
+👉 建议你现在采取的行动是...（具体可行的建议）
 
 👉 建议你现在采取的行动是...（具体可行的建议）
 

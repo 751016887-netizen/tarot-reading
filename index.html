@@ -1621,12 +1621,20 @@
         }
         
         async function showReadingWithAI() {
-            // 显示加载动画（在抽牌区域，保持可见）
+            // 确保只显示加载动画
+            document.getElementById('drawSection').classList.add('active');
+            const readingSection = document.getElementById('readingSection');
+            const aiReadingSection = document.getElementById('aiReadingSection');
+            
+            // 确保解牌页面不显示
+            readingSection.classList.remove('active');
+            aiReadingSection.classList.remove('active');
+            
+            // 显示加载动画（在抽牌区域）
             const cardsContainer = document.getElementById('cardsContainer');
-            cardsContainer.innerHTML = '';
             cardsContainer.innerHTML = '<div class="loading-container" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 20px;min-height:400px;"><div style="font-size:3rem;margin-bottom:20px;">🔮</div><div style="font-size:1.2rem;color:#f5e6d8;text-align:center;">正在为你解读牌面...</div><div class="ai-loading-dots" style="margin-top:25px;display:flex;justify-content:center;gap:8px;"><span></span><span></span><span></span></div></div>';
             
-            // 翻牌动画（快速完成，保持选中状态）
+            // 翻牌（翻面显示，保持选中状态）
             const allCardEls = document.querySelectorAll('.tarot-card.selected');
             allCardEls.forEach((cardEl, idx) => {
                 setTimeout(() => {
@@ -1637,9 +1645,6 @@
                     }
                 }, idx * 150);
             });
-            
-            const readingSection = document.getElementById('readingSection');
-            const aiReadingSection = document.getElementById('aiReadingSection');
             
             // 并行加载：所有牌的 AI 解读 + 综合总结
             const cardMeaningPromises = selectedCards.map((card, index) => {
@@ -1708,8 +1713,10 @@ ${selectedCards.map((card, i) => {
                     }
                 );
                 
-                // 全部加载完成，显示解牌页面
-                readingSection.classList.add('active');
+                // 全部加载完成后，切换到解牌页面
+                document.getElementById('drawSection').classList.remove('active'); // 隐藏抽牌页面
+                readingSection.classList.add('active'); // 显示解牌页面
+                aiReadingSection.classList.add('active'); // 显示 AI 总结
                 
                 // 生成传统解读（每张牌）
                 let html = '';
@@ -1739,14 +1746,14 @@ ${selectedCards.map((card, i) => {
                         <p style="font-size: 0.85rem; color: var(--text-muted);">上方牌意解读已完成，请查看</p>
                     </div>`
                     : aiSummary.replace(/\n\n/g, '<br><br>');
-                aiReadingSection.classList.add('active');
                 
                 // 滚动到顶部
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 
             } catch (error) {
                 console.error('加载失败:', error);
-                // 如果出错，至少显示牌意解读
+                // 如果出错，显示错误提示
+                document.getElementById('drawSection').classList.remove('active');
                 readingSection.classList.add('active');
                 document.getElementById('readingContent').innerHTML = '<div style="text-align:center;padding:40px 20px;color:#e57373;">⚠ 加载失败，请重试</div>';
             }
